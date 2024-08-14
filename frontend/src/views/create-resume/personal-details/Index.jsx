@@ -19,18 +19,18 @@ import Chip from '@mui/material/Chip'
 
 // Vars
 const initialData = {
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    organization: 'Pixinvent',
-    phoneNumber: '+1 (917) 543-9876',
-    address: '123 Main St, New York, NY 10001',
-    state: 'New York',
-    zipCode: '634880',
-    country: 'usa',
-    language: 'arabic',
-    timezone: 'gmt-12',
-    currency: 'usd'
+    firstName: '',
+    lastName: '',
+    email: '',
+    organization: '',
+    phoneNumber: '',
+    address: '',
+    state: '',
+    zipCode: '',
+    country: '',
+    language: '',
+    timezone: '',
+    currency: ''
   }
 
 
@@ -94,7 +94,7 @@ const PersonalDetailComponent  = () =>{
     return(
         <>
            {/* <Card> */}
-      {/* <CardContent className='mbe-5'>
+      <CardContent className='mbe-5'>
         <div className='flex max-sm:flex-col items-center gap-6'>
           <img height={100} width={100} className='rounded' src={imgSrc} alt='Profile' />
           <div className='flex flex-grow flex-col gap-4'>
@@ -117,7 +117,7 @@ const PersonalDetailComponent  = () =>{
             <Typography>Allowed JPG, GIF or PNG. Max size of 800K</Typography>
           </div>
         </div>
-      </CardContent> */}
+      </CardContent>
       <CardContent>
         <form onSubmit={e => e.preventDefault()}>
           <Grid container spacing={5}>
@@ -286,14 +286,7 @@ const PersonalDetailComponent  = () =>{
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} className='flex gap-4 flex-wrap pbs-6'>
-              <Button variant='contained' type='submit'>
-                Save Changes
-              </Button>
-              <Button variant='outlined' type='reset' color='secondary' onClick={() => setFormData(initialData)}>
-                Reset
-              </Button>
-            </Grid>
+            
           </Grid>
         </form>
       </CardContent>
