@@ -1,3 +1,5 @@
+
+
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Stepper from '@mui/material/Stepper';
@@ -11,10 +13,10 @@ const steps = [
   'Skills'
 ];
 
-export default function HorizontalLinearAlternativeLabelStepper() {
+export default function HorizontalLinearAlternativeLabelStepper({currentStep , setCurrentStep}) {
   return (
     <Box sx={{ width: '100%' }}>
-      <Stepper activeStep={1} alternativeLabel>
+      <Stepper activeStep={currentStep} alternativeLabel>
         {steps.map((label) => (
           <Step key={label}>
             <StepLabel>{label}</StepLabel>
