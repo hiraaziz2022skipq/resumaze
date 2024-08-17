@@ -5,7 +5,7 @@ from sqlalchemy import pool
 from sqlmodel import SQLModel
 
 from alembic import context
-from resume.model import Resume, ProfessionalInfo, SocialMedia, Experience, Education, Projects, Certifications, Languages, References, ExtraInfo
+from resume.model import Resume, ProfessionalInfo, SocialMedia, Experience, Education, Projects, Certifications, Languages, References, ExtraInfo, ResumeSteps
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
