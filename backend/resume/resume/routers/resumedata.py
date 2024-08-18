@@ -1,47 +1,22 @@
-from datetime import timedelta, datetime
+from datetime import datetime
 from typing import Annotated
 from fastapi import Depends, HTTPException, APIRouter
+from fastapi.responses import JSONResponse
 from sqlmodel import Session, SQLModel
 from starlette import status 
 from resume.db import engine
 from resume.model import User
 from dotenv import load_dotenv
+from sqlmodel import Field
 import os 
 from resume.model import Resume, ProfessionalInfo, SocialMedia, Experience, Education, Projects, Certifications, Languages, References, ExtraInfo, ResumeSteps
-
+from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional, List
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
 from sqlalchemy.future import select
-
-class ResumeInput(BaseModel):
-    professional_info: Optional[ProfessionalInfo] = None
-    social_media: Optional[SocialMedia] = None
-    experience: Optional[Experience] = None
-    education: Optional[Education] = None
-    projects: Optional[Projects] = None
-    certifications: Optional[Certifications] = None
-    languages: Optional[Languages] = None
-    references: Optional[References] = None
-    extra_info: Optional[ExtraInfo] = None
-    skill_set: Optional[List[str]] = None
-
-class ResumeOutput(BaseModel):
-    id: int
-    professional_info: Optional[ProfessionalInfo] = None
-    social_media: Optional[SocialMedia] = None
-    experience: Optional[Experience] = None
-    education: Optional[Education] = None
-    projects: Optional[Projects] = None
-    certifications: Optional[Certifications] = None
-    languages: Optional[Languages] = None
-    references: Optional[References] = None
-    extra_info: Optional[ExtraInfo] = None
-    skill_set: Optional[List[str]] = None
-    steps: Optional[ResumeSteps] = None
-    class Config:
-        orm_mode = True
+from fastapi.encoders import jsonable_encoder
 
 router = APIRouter(
     prefix="/api/resume",
@@ -57,186 +32,553 @@ def get_session():
         
 db_dependency = Annotated[Session, Depends(get_session)]
 
-@router.post("/create", status_code=status.HTTP_201_CREATED, response_model=ResumeOutput)
-def create_resume(resume_input: dict, session: db_dependency):
+class ProfessionalInfoInput(BaseModel):
+    name: Optional[str] = None
+    image: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    nationality: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    job_title: Optional[str] = None
+    professional_summary: Optional[str] = None
+
+class SocialMediaInput(BaseModel):
+    social_media: List[dict] = []
+
+class ExperienceInput(BaseModel):
+    company_name: Optional[str] = None
+    job_title: Optional[str] = None
+    job_description: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    location: Optional[str] = None
+    is_current: Optional[bool] = None
+
+class EducationInput(BaseModel):
+    institute_name: Optional[str] = None
+    degree: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    location: Optional[str] = None
+    is_current: Optional[bool] = None
+
+class ProjectInput(BaseModel):
+    project_name: Optional[str] = None
+    project_description: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
+class CertificationInput(BaseModel):
+    certification_name: Optional[str] = None
+    certification_link: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
+class LanguageInput(BaseModel):
+    language: Optional[str] = None
+    proficiency: Optional[str] = None
+
+class ReferenceInput(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    relationship: Optional[str] = None
+
+class ExtraInfoInput(BaseModel):
+    key: Optional[str] = None
+    value: Optional[str] = None
+
+class UserInput(BaseModel):
+    name: str
+    email: str
+    password: str
+
+
+# Helper function to update resume steps
+def update_resume_steps(resume_id: int, field: str, session: Session, is_complete: bool):
+    resume_steps = session.get(ResumeSteps, resume_id) or ResumeSteps(resume_id=resume_id)
+    setattr(resume_steps, field, is_complete)
+    session.add(resume_steps)
+
+def get_resume_steps(resume_id: int, session: Session) -> dict:
+    resume_steps = session.get(ResumeSteps, resume_id)
+    if not resume_steps:
+        return {}
+    return resume_steps.model_dump()
+
+def hash_password(password: str) -> str:
+    # This is a placeholder. Use a proper password hashing library like bcrypt
+    return f"hashed_{password}"
+
+# Helper function to check if all mandatory fields are filled
+def all_mandatory_fields_filled(data: dict, mandatory_fields: list) -> bool:
+    return all(data.get(field) for field in mandatory_fields)
+
+# Add this API to create a user with an empty resume
+@router.post("/create-user", status_code=status.HTTP_201_CREATED)
+def create_user(user_input: UserInput, session: db_dependency):
+    # Check if user with this email already exists
+    existing_user = session.exec(select(User).where(User.email == user_input.email)).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="User with this email already exists")
+
+    # Create an empty resume
     new_resume = Resume()
     session.add(new_resume)
+    session.flush()  # This assigns an id to new_resume
+
+    # Create the user
+    new_user = User(
+        name=user_input.name,
+        email=user_input.email,
+        hashed_password=hash_password(user_input.password),
+        resumes=new_resume.id
+    )
+    session.add(new_user)
+
     session.commit()
+    session.refresh(new_user)
     session.refresh(new_resume)
 
-    resume_steps = ResumeSteps(resume_id=new_resume.id)
+    return JSONResponse(content=jsonable_encoder({
+        "user": {
+            "id": new_user.id,
+            "name": new_user.name,
+            "email": new_user.email,
+            "resumes": new_user.resumes
+        },
+        "resume": new_resume,
+    }))
+# API routes
+@router.get("/{resume_id}/steps")
+def get_steps(resume_id: int, session: db_dependency):
+    steps = get_resume_steps(resume_id, session)
+    if not steps:
+        raise HTTPException(status_code=404, detail="Resume steps not found")
+    return JSONResponse(content=steps)
 
-    for key, value in resume_input.items():
-        if value is not None and key != 'skill_set':
-            model_class = globals()[key.replace('_', ' ').title().replace(' ', '')]
-            model_instance = model_class(**value)
-            session.add(model_instance)
-            session.flush()
-            setattr(new_resume, f"{key}_id", model_instance.id)
-            
-            # Update resume_steps based on mandatory fields
-            if key == 'professional_info':
-                resume_steps.professional_info = all([
-                    value.get('name'), value.get('email'), value.get('phone'),
-                    value.get('address'), value.get('job_title'), value.get('professional_summary')
-                ])
-            elif key == 'social_media':
-                resume_steps.social_media = any([
-                    value.get('linkedin'), value.get('github'), value.get('twitter'),
-                    value.get('facebook'), value.get('instagram'), value.get('youtube'), value.get('website')
-                ])
-            elif key == 'experience':
-                resume_steps.experience = all([
-                    value.get('company_name'), value.get('job_title'), value.get('start_date'),
-                    value.get('end_date'), value.get('location'), value.get('is_current')
-                ])
-            elif key == 'education':
-                resume_steps.education = all([
-                    value.get('institute_name'), value.get('degree'), value.get('start_date'), value.get('end_date')
-                ])
-            elif key == 'projects':
-                resume_steps.projects = all([value.get('project_name'), value.get('project_description')])
-            elif key == 'certifications':
-                resume_steps.certifications = bool(value.get('certification_name'))
-            elif key == 'languages':
-                resume_steps.languages = bool(value.get('language'))
-
-    if 'skill_set' in resume_input:
-        new_resume.skill_set = resume_input['skill_set']
-
-    session.add(new_resume)
-    session.add(resume_steps)
-    session.commit()
-    session.refresh(new_resume)
-    session.refresh(resume_steps)
-
-    return ResumeOutput(
-        id=new_resume.id,
-        professional_info=session.get(ProfessionalInfo, new_resume.professional_info_id),
-        social_media=session.get(SocialMedia, new_resume.social_media_id),
-        experience=session.get(Experience, new_resume.experience_id),
-        education=session.get(Education, new_resume.education_id),
-        projects=session.get(Projects, new_resume.projects_id),
-        certifications=session.get(Certifications, new_resume.certifications_id),
-        languages=session.get(Languages, new_resume.languages_id),
-        references=session.get(References, new_resume.references_id),
-        extra_info=session.get(ExtraInfo, new_resume.extra_info_id),
-        skill_set=new_resume.skill_set,
-        steps=resume_steps
-    )
-
-
-@router.get("/{resume_id}", response_model=ResumeOutput)
-def get_resume(resume_id: int, session: db_dependency):
-    stmt = (
-        select(Resume)
-        .options(
-            selectinload(Resume.professional_info),
-            selectinload(Resume.social_media),
-            selectinload(Resume.experience),
-            selectinload(Resume.education),
-            selectinload(Resume.projects),
-            selectinload(Resume.certifications),
-            selectinload(Resume.languages),
-            selectinload(Resume.references),
-            selectinload(Resume.extra_info),
-            selectinload(Resume.steps)
-        )
-        .where(Resume.id == resume_id)
-    )
-
-    result = session.exec(stmt)
-    resume = result.scalars().first()
-
-    if not resume:
-        raise HTTPException(status_code=404, detail="Resume not found")
-
-    return ResumeOutput(
-        id=resume.id,
-        professional_info=resume.professional_info,
-        social_media=resume.social_media,
-        experience=resume.experience,
-        education=resume.education,
-        projects=resume.projects,
-        certifications=resume.certifications,
-        languages=resume.languages,
-        references=resume.references,
-        extra_info=resume.extra_info,
-        skill_set=resume.skill_set,
-        steps=resume.steps
-    )
-
-
-@router.put("/{resume_id}", response_model=ResumeOutput)
-def update_resume(resume_id: int, resume_input: dict, session: db_dependency):
+#skills route
+@router.get("/{resume_id}/skills")
+def get_skills(resume_id: int, session: db_dependency):
     resume = session.get(Resume, resume_id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
+    return JSONResponse(content=jsonable_encoder({"skills": resume.skill_set}))
 
-    resume_steps = session.get(ResumeSteps, resume.steps.id) if resume.steps else ResumeSteps(resume_id=resume.id)
-
-    for key, value in resume_input.items():
-        if value is not None and key != 'skill_set':
-            model_class = globals()[key.replace('_', ' ').title().replace(' ', '')]
-            model_id = getattr(resume, f"{key}_id")
-            
-            if model_id:
-                model_instance = session.get(model_class, model_id)
-                for field, field_value in value.items():
-                    setattr(model_instance, field, field_value)
-            else:
-                model_instance = model_class(**value)
-                session.add(model_instance)
-                session.flush()
-                setattr(resume, f"{key}_id", model_instance.id)
-            
-            # Update resume_steps based on mandatory fields
-            if key == 'professional_info':
-                resume_steps.professional_info = all([
-                    model_instance.name, model_instance.email, model_instance.phone,
-                    model_instance.address, model_instance.job_title, model_instance.professional_summary
-                ])
-            elif key == 'social_media':
-                resume_steps.social_media = any([
-                    model_instance.linkedin, model_instance.github, model_instance.twitter,
-                    model_instance.facebook, model_instance.instagram, model_instance.youtube, model_instance.website
-                ])
-            elif key == 'experience':
-                resume_steps.experience = all([
-                    model_instance.company_name, model_instance.job_title, model_instance.start_date,
-                    model_instance.end_date, model_instance.location, model_instance.is_current
-                ])
-            elif key == 'education':
-                resume_steps.education = all([
-                    model_instance.institute_name, model_instance.degree, model_instance.start_date, model_instance.end_date
-                ])
-            elif key == 'projects':
-                resume_steps.projects = all([model_instance.project_name, model_instance.project_description])
-            elif key == 'certifications':
-                resume_steps.certifications = bool(model_instance.certification_name)
-            elif key == 'languages':
-                resume_steps.languages = bool(model_instance.language)
-
-    if 'skill_set' in resume_input:
-        resume.skill_set = resume_input['skill_set']
-
-    session.add(resume)
-    session.add(resume_steps)
+@router.post("/{resume_id}/skills", response_model=Resume)
+def post_skills(resume_id: int, skills: List[str], session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    resume.skill_set = skills
     session.commit()
     session.refresh(resume)
-    session.refresh(resume_steps)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"resume": resume.model_dump(), "steps": steps}))
 
-    return ResumeOutput(
-        id=resume.id,
-        professional_info=session.get(ProfessionalInfo, resume.professional_info_id),
-        social_media=session.get(SocialMedia, resume.social_media_id),
-        experience=session.get(Experience, resume.experience_id),
-        education=session.get(Education, resume.education_id),
-        projects=session.get(Projects, resume.projects_id),
-        certifications=session.get(Certifications, resume.certifications_id),
-        languages=session.get(Languages, resume.languages_id),
-        references=session.get(References, resume.references_id),
-        extra_info=session.get(ExtraInfo, resume.extra_info_id),
-        skill_set=resume.skill_set,
-        steps=resume_steps
-    )
+@router.put("/{resume_id}/skills", response_model=Resume)
+def update_skills(resume_id: int, skills: List[str], session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    resume.skill_set = skills
+    session.commit()
+    session.refresh(resume)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"resume": resume.model_dump(), "steps": steps}))
+
+
+# professional info route
+@router.get("/{resume_id}/professional-info")
+def get_professional_info(resume_id: int, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume or not resume.professional_info:
+        raise HTTPException(status_code=404, detail="Professional info not found")
+    return JSONResponse(content=jsonable_encoder({"professional_info": resume.professional_info.model_dump()}))
+
+@router.post("/{resume_id}/professional-info", response_model=ProfessionalInfo)
+def post_professional_info(resume_id: int, info: ProfessionalInfoInput, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    new_professional_info = ProfessionalInfo(**info.model_dump(), resume_id=resume_id)
+    session.add(new_professional_info)
+    
+    mandatory_fields = ["name", "image", "email", "phone", "address", "job_title"]
+    is_complete = all_mandatory_fields_filled(info.model_dump(), mandatory_fields)
+    update_resume_steps(resume_id, "professional_info", session, is_complete)
+    
+    session.commit()
+    session.refresh(new_professional_info)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({
+        "professional_info": new_professional_info.model_dump(),
+        "steps": steps
+    }))
+
+@router.put("/{resume_id}/professional-info", response_model=ProfessionalInfo)
+def update_professional_info(resume_id: int, info: ProfessionalInfoInput, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    if resume.professional_info:
+        for field, value in info.model_dump(exclude_unset=True).items():
+            setattr(resume.professional_info, field, value)
+    else:
+        professional_info = ProfessionalInfo(**info.model_dump(), resume_id=resume_id)
+        session.add(professional_info)
+    
+    mandatory_fields = ["name", "image", "email", "phone", "address", "job_title"]
+    is_complete = all_mandatory_fields_filled(info.model_dump(), mandatory_fields)
+    update_resume_steps(resume_id, "professional_info", session, is_complete)
+    
+    session.commit()
+    session.refresh(resume.professional_info)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({
+        "professional_info": resume.professional_info.model_dump(),
+        "steps": steps
+    }))
+
+
+#social media route
+@router.get("/{resume_id}/social-media")
+def get_social_media(resume_id: int, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume or not resume.social_media:
+        raise HTTPException(status_code=404, detail="Social media not found")
+    return JSONResponse(content=jsonable_encoder({"social_media": resume.social_media.model_dump()}))
+
+@router.post("/{resume_id}/social-media", response_model=SocialMedia)
+def post_social_media(resume_id: int, social_media: SocialMediaInput, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    new_social_media = SocialMedia(resume_id=resume_id, social_media=social_media.social_media)
+    session.add(new_social_media)
+    update_resume_steps(resume_id, "social_media", session, bool(social_media.social_media))
+    session.commit()
+    session.refresh(new_social_media)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"social_media": new_social_media.model_dump(), "steps": steps}))
+
+@router.put("/{resume_id}/social-media", response_model=SocialMedia)
+def update_social_media(resume_id: int, social_media: SocialMediaInput, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    if resume.social_media:
+        resume.social_media.social_media = social_media.social_media
+    else:
+        new_social_media = SocialMedia(resume_id=resume_id, social_media=social_media.social_media)
+        session.add(new_social_media)
+    
+    update_resume_steps(resume_id, "social_media", session, bool(social_media.social_media))
+    session.commit()
+    session.refresh(resume.social_media)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"social_media": resume.social_media.model_dump(), "steps": steps}))
+
+
+# experience route
+@router.get("/{resume_id}/experience")
+def get_experience(resume_id: int, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    experiences = session.exec(select(Experience).where(Experience.resume_id == resume_id)).all()
+    return JSONResponse(content=jsonable_encoder({"experience": [exp.model_dump() for exp in experiences]}))
+
+@router.post("/{resume_id}/experience", response_model=Experience)
+def add_experience(resume_id: int, experience: ExperienceInput, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    new_experience = Experience(**experience.model_dump(), resume_id=resume_id)
+    session.add(new_experience)
+    
+    mandatory_fields = ["company_name", "job_title", "start_date", "end_date"]
+    is_complete = all_mandatory_fields_filled(experience.model_dump(), mandatory_fields)
+    update_resume_steps(resume_id, "experience", session, is_complete)
+    
+    session.commit()
+    session.refresh(new_experience)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"experience": new_experience.model_dump(), "steps": steps}))
+
+@router.put("/{resume_id}/experience/{experience_id}", response_model=Experience)
+def update_experience(resume_id: int, experience_id: int, experience: ExperienceInput, session: db_dependency):
+    db_experience = session.get(Experience, experience_id)
+    if not db_experience or db_experience.resume_id != resume_id:
+        raise HTTPException(status_code=404, detail="Experience not found")
+    
+    for field, value in experience.model_dump(exclude_unset=True).items():
+        setattr(db_experience, field, value)
+    
+    mandatory_fields = ["company_name", "job_title", "start_date", "end_date"]
+    is_complete = all_mandatory_fields_filled(db_experience.model_dump(), mandatory_fields)
+    update_resume_steps(resume_id, "experience", session, is_complete)
+    
+    session.commit()
+    session.refresh(db_experience)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"experience": db_experience.model_dump(), "steps": steps}))
+
+
+# education route
+@router.get("/{resume_id}/education")
+def get_education(resume_id: int, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    educations = session.exec(select(Education).where(Education.resume_id == resume_id)).all()
+    return JSONResponse(content=jsonable_encoder({"education": [edu.model_dump() for edu in educations]}))
+
+@router.post("/{resume_id}/education", response_model=Education)
+def add_education(resume_id: int, education: EducationInput, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    new_education = Education(**education.model_dump(), resume_id=resume_id)
+    session.add(new_education)
+    
+    mandatory_fields = ["institute_name", "degree", "start_date", "end_date"]
+    is_complete = all_mandatory_fields_filled(education.model_dump(), mandatory_fields)
+    update_resume_steps(resume_id, "education", session, is_complete)
+    
+    session.commit()
+    session.refresh(new_education)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"education": new_education.model_dump(), "steps": steps}))
+
+@router.put("/{resume_id}/education/{education_id}", response_model=Education)
+def update_education(resume_id: int, education_id: int, education: EducationInput, session: db_dependency):
+    db_education = session.get(Education, education_id)
+    if not db_education or db_education.resume_id != resume_id:
+        raise HTTPException(status_code=404, detail="Education not found")
+    
+    for field, value in education.model_dump(exclude_unset=True).items():
+        setattr(db_education, field, value)
+
+    mandatory_fields = ["institute_name", "degree", "start_date", "end_date"]
+    is_complete = all_mandatory_fields_filled(education.model_dump(), mandatory_fields)
+    update_resume_steps(resume_id, "education", session, is_complete)
+    
+    session.commit()
+    session.refresh(db_education)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"education": db_education.model_dump(), "steps": steps}))
+
+
+# projects route
+@router.get("/{resume_id}/projects")
+def get_projects(resume_id: int, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    projects = session.exec(select(Projects).where(Projects.resume_id == resume_id)).all()
+    return JSONResponse(content=jsonable_encoder({"projects": [proj.model_dump() for proj in projects]}))
+
+@router.post("/{resume_id}/projects", response_model=Projects)
+def add_projects(resume_id: int, projects: ProjectInput, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    new_projects = Projects(**projects.model_dump(), resume_id=resume_id)
+    session.add(new_projects)
+    
+    is_complete = bool(projects.project_name)
+    update_resume_steps(resume_id, "projects", session, is_complete)
+    
+    session.commit()
+    session.refresh(new_projects)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"projects": new_projects.model_dump(), "steps": steps}))
+
+@router.put("/{resume_id}/projects/{projects_id}", response_model=Projects)
+def update_projects(resume_id: int, projects_id: int, projects: ProjectInput, session: db_dependency):
+    db_projects = session.get(Projects, projects_id)
+    if not db_projects or db_projects.resume_id != resume_id:
+        raise HTTPException(status_code=404, detail="Projects not found")
+    
+    for field, value in projects.model_dump(exclude_unset=True).items():
+        setattr(db_projects, field, value)
+
+    is_complete = bool(projects.project_name)
+    update_resume_steps(resume_id, "projects", session, is_complete)
+    
+    session.commit()
+    session.refresh(db_projects)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"projects": db_projects.model_dump(), "steps": steps}))
+
+
+# certifications route
+@router.get("/{resume_id}/certifications")
+def get_certifications(resume_id: int, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    certifications = session.exec(select(Certifications).where(Certifications.resume_id == resume_id)).all()
+    return JSONResponse(content=jsonable_encoder({"certifications": [cert.model_dump() for cert in certifications]}))
+
+@router.post("/{resume_id}/certifications", response_model=Certifications)
+def add_certifications(resume_id: int, certifications: CertificationInput, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    new_certifications = Certifications(**certifications.model_dump(), resume_id=resume_id)
+    session.add(new_certifications)
+    
+    is_complete = bool(certifications.certification_name)
+    update_resume_steps(resume_id, "certifications", session, is_complete)
+    
+    session.commit()
+    session.refresh(new_certifications)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"certifications": new_certifications.model_dump(), "steps": steps}))
+
+@router.put("/{resume_id}/certifications/{certifications_id}", response_model=Certifications)
+def update_certifications(resume_id: int, certifications_id: int, certifications: CertificationInput, session: db_dependency):
+    db_certifications = session.get(Certifications, certifications_id)
+    if not db_certifications or db_certifications.resume_id != resume_id:
+        raise HTTPException(status_code=404, detail="Certifications not found")
+    
+    for field, value in certifications.model_dump(exclude_unset=True).items():
+        setattr(db_certifications, field, value)
+
+    is_complete = bool(certifications.certification_name)
+    update_resume_steps(resume_id, "certifications", session, is_complete)
+    
+    session.commit()
+    session.refresh(db_certifications)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"certifications": db_certifications.model_dump(), "steps": steps}))
+
+# languages route
+@router.get("/{resume_id}/languages")
+def get_languages(resume_id: int, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    languages = session.exec(select(Languages).where(Languages.resume_id == resume_id)).all()
+    return JSONResponse(content=jsonable_encoder({"languages": [lang.model_dump() for lang in languages]}))
+
+@router.post("/{resume_id}/languages", response_model=Languages)
+def add_languages(resume_id: int, languages: LanguageInput, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    new_languages = Languages(**languages.model_dump(), resume_id=resume_id)
+    session.add(new_languages)
+    
+    is_complete = bool(languages.language)
+    update_resume_steps(resume_id, "languages", session, is_complete)
+    
+    session.commit()
+    session.refresh(new_languages)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"languages": new_languages.model_dump(), "steps": steps}))
+
+@router.put("/{resume_id}/languages/{languages_id}", response_model=Languages)
+def update_languages(resume_id: int, languages_id: int, languages: LanguageInput, session: db_dependency):
+    db_languages = session.get(Languages, languages_id)
+    if not db_languages or db_languages.resume_id != resume_id:
+        raise HTTPException(status_code=404, detail="Languages not found")
+    
+    for field, value in languages.model_dump(exclude_unset=True).items():
+        setattr(db_languages, field, value)
+
+    is_complete = bool(languages.language)
+    update_resume_steps(resume_id, "languages", session, is_complete)
+    
+    session.commit()
+    session.refresh(db_languages)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"languages": db_languages.model_dump(), "steps": steps}))
+
+
+# do not add resume steps in reference and extra info 
+@router.get("/{resume_id}/references")
+def get_references(resume_id: int, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    references = session.exec(select(References).where(References.resume_id == resume_id)).all()
+    return JSONResponse(content=jsonable_encoder({"references": [ref.model_dump() for ref in references]}))
+
+@router.post("/{resume_id}/references", response_model=References)
+def add_references(resume_id: int, references: ReferenceInput, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    new_references = References(**references.model_dump(), resume_id=resume_id)
+    session.add(new_references)
+    session.commit()
+    session.refresh(new_references)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"references": new_references.model_dump(), "steps": steps}))
+
+@router.put("/{resume_id}/references/{references_id}", response_model=References)
+def update_references(resume_id: int, references_id: int, references: ReferenceInput, session: db_dependency):
+    db_references = session.get(References, references_id)
+    if not db_references or db_references.resume_id != resume_id:
+        raise HTTPException(status_code=404, detail="References not found")
+    
+    for field, value in references.model_dump(exclude_unset=True).items():
+        setattr(db_references, field, value)
+    
+    session.commit()
+    session.refresh(db_references)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"references": db_references.model_dump(), "steps": steps}))
+
+
+# extra info route
+@router.get("/{resume_id}/extra-info")
+def get_extra_info(resume_id: int, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    extra_info = session.exec(select(ExtraInfo).where(ExtraInfo.resume_id == resume_id)).all()
+    return JSONResponse(content=jsonable_encoder({"extra_info": [info.model_dump() for info in extra_info]}))
+
+@router.post("/{resume_id}/extra-info", response_model=ExtraInfo)
+def add_extra_info(resume_id: int, extra_info: ExtraInfoInput, session: db_dependency):
+    resume = session.get(Resume, resume_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    new_extra_info = ExtraInfo(**extra_info.model_dump(), resume_id=resume_id)
+    session.add(new_extra_info)
+    session.commit()
+    session.refresh(new_extra_info)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"extra_info": new_extra_info.model_dump(), "steps": steps}))
+
+@router.put("/{resume_id}/extra-info/{extra_info_id}", response_model=ExtraInfo)
+def update_extra_info(resume_id: int, extra_info_id: int, extra_info: ExtraInfoInput, session: db_dependency):
+    db_extra_info = session.get(ExtraInfo, extra_info_id)
+    if not db_extra_info or db_extra_info.resume_id != resume_id:
+        raise HTTPException(status_code=404, detail="ExtraInfo not found")
+    
+    for field, value in extra_info.model_dump(exclude_unset=True).items():
+        setattr(db_extra_info, field, value)
+    
+    session.commit()
+    session.refresh(db_extra_info)
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"extra_info": db_extra_info.model_dump(), "steps": steps}))
+
