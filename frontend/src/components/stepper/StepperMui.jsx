@@ -10,6 +10,10 @@ const steps = [
   'Personal Details',
   'Professional Summary',
   'Employment History',
+  'Skills',
+  'Personal Details',
+  'Professional Summary',
+  'Employment History',
   'Skills'
 ];
 
