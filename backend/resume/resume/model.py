@@ -1,9 +1,9 @@
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
 from datetime import datetime
 from sqlalchemy import Enum as SAEnum 
 from sqlalchemy.dialects.postgresql import JSON
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 class UserRole(Enum):
     employee = "employee"
@@ -19,6 +19,18 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default=datetime.utcnow())
     resumes: int | None = Field(default=None, foreign_key="resume.id")
 
+class ResumeSteps(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    resume_id: int = Field(foreign_key="resume.id")
+    professional_info: bool = Field(default=False)
+    social_media: bool = Field(default=False)
+    experience: bool = Field(default=False)
+    education: bool = Field(default=False)
+    projects: bool = Field(default=False)
+    certifications: bool = Field(default=False)
+    languages: bool = Field(default=False)
+    resume: "Resume" = Relationship(back_populates="steps")
+
 class Resume(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     skill_set : List[str] | None = Field(sa_type=JSON)
@@ -32,10 +44,12 @@ class Resume(SQLModel, table=True):
     references_id: int | None = Field(default=None, foreign_key="references.id")
     extra_info_id: int | None = Field(default=None, foreign_key="extrainfo.id")
     created_at: datetime = Field(default=datetime.utcnow())
+    steps: Optional[ResumeSteps] = Relationship(back_populates="resume")
 
 class ProfessionalInfo(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str | None = None
+    image: str | None = None
     email: str | None = None
     phone: str | None = None
     address: str | None = None
