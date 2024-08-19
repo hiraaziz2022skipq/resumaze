@@ -4,6 +4,7 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import JSON
 from enum import Enum
 from typing import List, Optional
+from typing import TYPE_CHECKING
 
 class UserRole(Enum):
     employee = "employee"
@@ -19,6 +20,23 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default=datetime.utcnow())
     resumes: int | None = Field(default=None, foreign_key="resume.id")
 
+class Resume(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    skill_set: Optional[List[str]] = Field(sa_type=JSON, default=None)
+    created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
+    
+    steps: Optional["ResumeSteps"] = Relationship(back_populates="resume", sa_relationship_kwargs={"uselist": False})
+    professional_info: Optional["ProfessionalInfo"] = Relationship(back_populates="resume", sa_relationship_kwargs={"uselist": False})
+    social_media: Optional["SocialMedia"] = Relationship(back_populates="resume", sa_relationship_kwargs={"uselist": False})
+    
+    experience: List[Optional["Experience"]] = Relationship(back_populates="resume")
+    education: List[Optional["Education"]] = Relationship(back_populates="resume")
+    projects: List[Optional["Projects"]] = Relationship(back_populates="resume")
+    certifications: List[Optional["Certifications"]] = Relationship(back_populates="resume")
+    languages: List[Optional["Languages"]] = Relationship(back_populates="resume")
+    references: List[Optional["References"]] = Relationship(back_populates="resume")
+    extra_info: List[Optional["ExtraInfo"]] = Relationship(back_populates="resume")
+
 class ResumeSteps(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     resume_id: int = Field(foreign_key="resume.id")
@@ -29,22 +47,7 @@ class ResumeSteps(SQLModel, table=True):
     projects: bool = Field(default=False)
     certifications: bool = Field(default=False)
     languages: bool = Field(default=False)
-    resume: "Resume" = Relationship(back_populates="steps")
-
-class Resume(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    skill_set : List[str] | None = Field(sa_type=JSON)
-    professional_info_id: int | None = Field(default=None, foreign_key="professionalinfo.id")
-    social_media_id: int | None = Field(default=None, foreign_key="socialmedia.id")
-    experience_id: int | None = Field(default=None, foreign_key="experience.id")
-    education_id: int | None = Field(default=None, foreign_key="education.id")
-    projects_id: int | None = Field(default=None, foreign_key="projects.id")
-    certifications_id: int | None = Field(default=None, foreign_key="certifications.id")
-    languages_id: int | None = Field(default=None, foreign_key="languages.id")
-    references_id: int | None = Field(default=None, foreign_key="references.id")
-    extra_info_id: int | None = Field(default=None, foreign_key="extrainfo.id")
-    created_at: datetime = Field(default=datetime.utcnow())
-    steps: Optional[ResumeSteps] = Relationship(back_populates="resume")
+    resume: Optional[Resume] = Relationship(back_populates="steps")
 
 class ProfessionalInfo(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -57,16 +60,14 @@ class ProfessionalInfo(SQLModel, table=True):
     date_of_birth: str | None = None
     job_title: str | None = None
     professional_summary: str | None = None
+    resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
+    resume: Optional[Resume] = Relationship(back_populates="professional_info")
 
 class SocialMedia(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    linkedin: str | None = None
-    github: str | None = None
-    twitter: str | None = None
-    facebook: str | None = None
-    instagram: str | None = None
-    youtube: str | None = None
-    website: str | None = None
+    social_media: List[dict] = Field(sa_type=JSON, default=[])
+    resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
+    resume: Optional[Resume] = Relationship(back_populates="social_media")
 
 class Experience(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -77,6 +78,8 @@ class Experience(SQLModel, table=True):
     end_date: str | None = None
     location: str | None = None
     is_current: bool | None = None
+    resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
+    resume: Optional[Resume] = Relationship(back_populates="experience")
 
 class Education(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -86,6 +89,8 @@ class Education(SQLModel, table=True):
     end_date: str | None = None
     location: str | None = None
     is_current: bool | None = None
+    resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
+    resume: Optional[Resume] = Relationship(back_populates="education")
 
 class Projects(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -93,6 +98,8 @@ class Projects(SQLModel, table=True):
     project_description: str | None = None
     start_date: str | None = None
     end_date: str | None = None
+    resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
+    resume: Optional[Resume] = Relationship(back_populates="projects")
 
 class Certifications(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -100,17 +107,21 @@ class Certifications(SQLModel, table=True):
     certification_link: str | None = None
     start_date: str | None = None
     end_date: str | None = None
+    resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
+    resume: Optional[Resume] = Relationship(back_populates="certifications")
 
 class LanguageProficiency(Enum):
     beginner = "beginner"
     intermediate = "intermediate"
     advanced = "advanced"
     native = "native"
-
+    
 class Languages(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     language: str | None = None
     proficiency: LanguageProficiency | None = Field(default=None, sa_type=SAEnum(LanguageProficiency))
+    resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
+    resume: Optional[Resume] = Relationship(back_populates="languages")
 
 class References(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -118,8 +129,12 @@ class References(SQLModel, table=True):
     email: str | None = None
     phone: str | None = None
     relationship: str | None = None
+    resume_id: Optional[int] = Field(default=None, foreign_key="resume.id") 
+    resume: Optional[Resume] = Relationship(back_populates="references")
 
 class ExtraInfo(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     key: str | None = None
     value: str | None = None
+    resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
+    resume: Optional[Resume] = Relationship(back_populates="extra_info")
