@@ -4,11 +4,19 @@ import { Button, Card, CardContent, Divider, Grid } from "@mui/material";
 import PersonalDetail from "./personal-details/Index";
 import Template1 from "@/components/templates/template1";
 import resumeFakeData from "@/fake-data/resume-fake-data";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PersonalSummary from "./personal-summary/Index";
 import EmploymentHistory from "./employment-history/Index";
 import Skills from "./skills/Index";
 import dynamic from "next/dynamic";
+import { options } from "@/utils/create-resume/profileCompletionPercentage";
+import axiosInstance from "@/utils/axiosInstance";
+import Languages from "./languages";
+import Education from "./education";
+import Project from "./project";
+import Certificates from "./certifications";
+import SocialMedia from "./social-media";
+import References from "./reference";
 
 // Styled Component Imports
 const AppReactApexCharts = dynamic(() =>
@@ -16,60 +24,91 @@ const AppReactApexCharts = dynamic(() =>
 );
 
 const CreateResume = () => {
+  // STATES
   const [currentStep, setCurrentStep] = useState(0);
 
-  // Vars
-  const series = [64];
+  const [professional_info, setProfessionalInfo] = useState({
+    name: "",
+    image: "/images/avatars/1.png",
+    email: "",
+    phone: "",
+    address: "",
+    nationality: "",
+    date_of_birth: "",
+    job_title: "",
+    professional_summary: "",
+  });
 
-  const options = {
-    chart: {
-      sparkline: { enabled: true },
-    },
-    stroke: { lineCap: "round" },
-    colors: ["var(--mui-palette-primary-main)"],
-    plotOptions: {
-      radialBar: {
-        hollow: { size: "55%" },
-        track: {
-          background: "var(--mui-palette-customColors-trackBg)",
-        },
-        dataLabels: {
-          name: { show: false },
-          value: {
-            offsetY: 5,
-            fontWeight: 500,
-            fontSize: "0.9375rem",
-            color: "var(--mui-palette-text-primary)",
-          },
-        },
-      },
-    },
-    states: {
-      hover: {
-        filter: { type: "none" },
-      },
-      active: {
-        filter: { type: "none" },
-      },
-    },
-  };
+  const [experience, setExperience] = useState([]);
+
+  const [skill_set, setSkillsSet] = useState([]);
+
+  const [projects, setProjects] = useState([]);
+
+  const [education, setEduction] = useState([]);
+
+  const [certifications, setCertifications] = useState([]);
+
+  const [extra_info, setExtraInfo] = useState({
+    key: "",
+    value: "",
+  });
+
+  const [references, setReferences] = useState([]);
+
+  const [social_media, setSocialmedia] = useState({
+    linkedin: "",
+    github: "",
+    twitter: "",
+    facebook: "",
+    instagram: "",
+    youtube: "",
+    website: "",
+  });
+
+  const [languages, setLanguages] = useState([]);
+
+  const [progress, setProgress] = useState(0);
+
+  const series = [0];
 
   const currentContent = [
-    <PersonalDetail />,
-    <PersonalSummary />,
-    <EmploymentHistory />,
-    <Skills />,
-    <PersonalDetail />,
-    <PersonalSummary />,
-    <EmploymentHistory />,
-    <Skills />,
+    <PersonalDetail
+      professional_info={professional_info}
+      setProfessionalInfo={setProfessionalInfo}
+    />,
+    <EmploymentHistory experience={experience} setExperience={setExperience} />,
+    <Education education={education} setEduction={setEduction} />,
+    <Project projects={projects} setProjects={setProjects} />,
+    <Certificates
+      certifications={certifications}
+      setCertifications={setCertifications}
+    />,
+    <Skills skill_set={skill_set} setSkillsSet={setSkillsSet} />,
+    <Languages languages={languages} setLanguages={setLanguages} />,
+    <PersonalSummary
+      professional_info={professional_info}
+      setProfessionalInfo={setProfessionalInfo}
+    />,
+    <SocialMedia social_media={social_media} setSocialmedia={setSocialmedia} />,
+    <References references={references} setReferences={setReferences} />,
   ];
 
   const handleNext = () => {
+    // const payload = {
+    //   professional_info,
+    //   experience,
+    //   skill_set
+    // }
+    // axiosInstance.post('/api/resume/create',payload).then(res =>{
+    //   console.log(res,"=== API Response ===")
+    // })
+
     if (currentStep === currentContent.length - 1) {
       return null;
     }
 
+    setProgress(progress + 10);
     setCurrentStep(currentStep + 1);
   };
 
@@ -110,12 +149,12 @@ const CreateResume = () => {
                     height={124}
                     width="100%"
                     options={options}
-                    series={series}
+                    series={[progress]}
                   />
                 </Grid>
               </Grid>
             </CardContent>
-            <Divider  variant="middle" />
+            <Divider variant="middle" />
             {currentContent[currentStep]}
             <Grid
               container
