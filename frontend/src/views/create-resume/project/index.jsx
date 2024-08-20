@@ -27,6 +27,7 @@ const ProjectCard = ({proj,index,isDefaultCard,onEdit = () => {} , onDelete = ()
         project_description,
         start_date,
         end_date,
+        id
     } = proj;
   
     // States
@@ -83,10 +84,10 @@ const ProjectCard = ({proj,index,isDefaultCard,onEdit = () => {} , onDelete = ()
               element={IconButton}
               elementProps={iconButtonProps}
               dialog={ProjectAdd}
-              dialogProps={{ data: proj, isEdit:true,index:index,onFinsish:onEdit}}
+              dialogProps={{ data: proj, isEdit:true,id:id,onFinsish:onEdit}}
             />
             <IconButton onClick={()=>{
-              onDelete(index)
+              onDelete(id)
             }}>
               <i className="ri-delete-bin-7-line text-textSecondary" />
             </IconButton>
@@ -111,7 +112,7 @@ const ProjectCard = ({proj,index,isDefaultCard,onEdit = () => {} , onDelete = ()
 
 
 
-const Project = ({projects , setProjects}) =>{
+const Project = ({projects , setProjects,onProjectAdd,onProjectEdit}) =>{
     // Vars
     const buttonProps = {
       variant: "outlined",
@@ -119,21 +120,18 @@ const Project = ({projects , setProjects}) =>{
       size: "small",
     };
   
-    const onEdit = (index, data) => {
-      const updatedProject = [...projects];
-      updatedProject[index] = data;
-      setProjects(updatedProject);
+    const onEdit = (id, data) => {
+      onProjectEdit(id,data)
     };
   
     const onDelete = (index) => {
-      const updatedProject = projects.filter((_, i) => i !== index);
-      setProjects(updatedProject);
+      // const updatedProject = projects.filter((_, i) => i !== index);
+      // setProjects(updatedProject);
     };
   
   
     const onAdd = (newProject) =>{
-      const newProjArray = [...projects,newProject]
-      setProjects(newProjArray)
+      onProjectAdd(newProject)
     }
   
     return (
@@ -153,7 +151,7 @@ const Project = ({projects , setProjects}) =>{
         <CardContent>
           {projects.map((proj, index) => (
             <div key={index}>
-              <ProjectCard key={index} proj={proj} index={index} is isDefaultCard={index===0} onEdit={onEdit} onDelete={onDelete}/>
+              <ProjectCard key={proj.id} proj={proj} index={index} is isDefaultCard={index===0} onEdit={onEdit} onDelete={onDelete}/>
               {index !== projects.length - 1 && <Divider />}
             </div>
           ))}

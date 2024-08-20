@@ -25,7 +25,6 @@ const initialCardData = {
   end_date: "",
   location: "",
   is_current: true,
-  badgeColor: "primary",
 };
 
 const ExperienceAdd = ({
@@ -33,7 +32,7 @@ const ExperienceAdd = ({
   setOpen,
   data,
   onFinsish,
-  index,
+  id,
   isEdit = false,
 }) => {
   // States
@@ -46,7 +45,7 @@ const ExperienceAdd = ({
 
   const onSubmit = () => {
     if (isEdit) {
-      onFinsish(index, cardData);
+      onFinsish(id, cardData);
     } else {
       onFinsish(cardData);
     }

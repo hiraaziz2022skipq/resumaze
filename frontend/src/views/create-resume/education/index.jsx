@@ -26,6 +26,7 @@ const EducationCards = ({edu,index,isDefaultCard,onEdit = () => {} , onDelete = 
         end_date,
         location,
         is_current,
+        id
     } = edu;
   
     // States
@@ -87,10 +88,10 @@ const EducationCards = ({edu,index,isDefaultCard,onEdit = () => {} , onDelete = 
               element={IconButton}
               elementProps={iconButtonProps}
               dialog={EducationAdd}
-              dialogProps={{ data: edu, isEdit:true,index:index,onFinsish:onEdit}}
+              dialogProps={{ data: edu, isEdit:true,id:id,onFinsish:onEdit}}
             />
             <IconButton onClick={()=>{
-              onDelete(index)
+              onDelete(id)
             }}>
               <i className="ri-delete-bin-7-line text-textSecondary" />
             </IconButton>
@@ -103,7 +104,7 @@ const EducationCards = ({edu,index,isDefaultCard,onEdit = () => {} , onDelete = 
 
   
 
-const Education = ({education ,setEduction}) =>{
+const Education = ({education ,setEduction , onEduAdd , onEduEdit}) =>{
 
     const buttonProps = {
         variant: "outlined",
@@ -111,21 +112,18 @@ const Education = ({education ,setEduction}) =>{
         size: "small",
       };
 
-      const onEdit = (index, data) => {
-        const updatedEducation = [...education];
-        updatedEducation[index] = data;
-        setEduction(updatedEducation);
+      const onEdit = (id, data) => {
+        onEduEdit(id,data)
       };
     
       const onDelete = (index) => {
-        const updatedEducation = education.filter((_, i) => i !== index);
-        setEduction(updatedEducation);
+        // const updatedEducation = education.filter((_, i) => i !== index);
+        // setEduction(updatedEducation);
       };
     
     
       const onAdd = (newEducation) =>{
-        const newExpArray = [...education,newEducation]
-        setEduction(newExpArray)
+        onEduAdd(newEducation)
       }
 
     return (
@@ -145,7 +143,7 @@ const Education = ({education ,setEduction}) =>{
           <CardContent>
             {education.map((edu, index) => (
               <div key={index}>
-                <EducationCards key={index} edu={edu} index={index} is isDefaultCard={index===0} onEdit={onEdit} onDelete={onDelete}/>
+                <EducationCards key={edu.id} edu={edu} index={index} is isDefaultCard={index===0} onEdit={onEdit} onDelete={onDelete}/>
                 {index !== education.length - 1 && <Divider />}
               </div>
             ))}

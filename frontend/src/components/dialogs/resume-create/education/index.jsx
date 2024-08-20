@@ -31,7 +31,7 @@ const EducationAdd = ({
   setOpen,
   data,
   onFinsish,
-  index,
+  id,
   isEdit = false,
 }) => {
   // States
@@ -44,7 +44,7 @@ const EducationAdd = ({
 
   const onSubmit = () => {
     if (isEdit) {
-      onFinsish(index, cardData);
+      onFinsish(id, cardData);
     } else {
       onFinsish(cardData);
     }

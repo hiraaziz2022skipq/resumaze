@@ -31,6 +31,7 @@ const ExperienceCards = ({exp,index,isDefaultCard,onEdit = () => {} , onDelete =
     end_date,
     location,
     is_current,
+    id
   } = exp;
 
   // States
@@ -92,10 +93,10 @@ const ExperienceCards = ({exp,index,isDefaultCard,onEdit = () => {} , onDelete =
             element={IconButton}
             elementProps={iconButtonProps}
             dialog={ExperienceAdd}
-            dialogProps={{ data: exp, isEdit:true,index:index,onFinsish:onEdit}}
+            dialogProps={{ data: exp, isEdit:true,id:id,onFinsish:onEdit}}
           />
           <IconButton onClick={()=>{
-            onDelete(index)
+            onDelete(exp.id)
           }}>
             <i className="ri-delete-bin-7-line text-textSecondary" />
           </IconButton>
@@ -130,7 +131,7 @@ const ExperienceCards = ({exp,index,isDefaultCard,onEdit = () => {} , onDelete =
   );
 };
 
-const EmploymentHistory = ({ experience, setExperience }) => {
+const EmploymentHistory = ({ experience, setExperience  ,onExpAdd , onExpEdit }) => {
   // Vars
   const buttonProps = {
     variant: "outlined",
@@ -138,21 +139,18 @@ const EmploymentHistory = ({ experience, setExperience }) => {
     size: "small",
   };
 
-  const onEdit = (index, data) => {
-    const updatedExperience = [...experience];
-    updatedExperience[index] = data;
-    setExperience(updatedExperience);
+  const onEdit = (id, data) => {
+    onExpEdit(id,data)
   };
 
-  const onDelete = (index) => {
-    const updatedExperience = experience.filter((_, i) => i !== index);
-    setExperience(updatedExperience);
+  const onDelete = (id) => {
+    // const updatedExperience = experience.filter((_, i) => i !== index);
+    // setExperience(updatedExperience);
   };
 
 
   const onAdd = (newExperience) =>{
-    const newExpArray = [...experience,newExperience]
-      setExperience(newExpArray)
+    onExpAdd(newExperience)
   }
 
   return (
@@ -172,7 +170,7 @@ const EmploymentHistory = ({ experience, setExperience }) => {
       <CardContent>
         {experience.map((exp, index) => (
           <div key={index}>
-            <ExperienceCards key={index} exp={exp} index={index} is isDefaultCard={index===0} onEdit={onEdit} onDelete={onDelete}/>
+            <ExperienceCards key={exp.id} exp={exp} index={index} is isDefaultCard={index===0} onEdit={onEdit} onDelete={onDelete}/>
             {index !== experience.length - 1 && <Divider />}
           </div>
         ))}

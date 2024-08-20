@@ -17,6 +17,28 @@ import Project from "./project";
 import Certificates from "./certifications";
 import SocialMedia from "./social-media";
 import References from "./reference";
+import {
+  addCertificationsService,
+  addEducationService,
+  addExperienceService,
+  addProjectsService,
+  getCertificationsService,
+  getEducationService,
+  getExperienceService,
+  getProfessionalInfoService,
+  getProjectsService,
+  getReferencesService,
+  getSkillsService,
+  getStepsService,
+  postProfessionalInfoService,
+  postSkillsService,
+  updateCertificationsService,
+  updateEducationService,
+  updateExperienceService,
+  updateProfessionalInfoService,
+  updateProjectsService,
+  updateSkillsService,
+} from "@/redux/create-resume/service";
 
 // Styled Component Imports
 const AppReactApexCharts = dynamic(() =>
@@ -26,6 +48,22 @@ const AppReactApexCharts = dynamic(() =>
 const CreateResume = () => {
   // STATES
   const [currentStep, setCurrentStep] = useState(0);
+
+  const resumeId = 8;
+  const [firstTimeVisit, setFirstTimeVisit] = useState({
+    professional_info: false,
+    skills: false,
+  });
+
+  const [stepCompleted, setStepCompleted] = useState({
+    professional_info: false,
+    experience: false,
+    projects: false,
+    languages: false,
+    social_media: false,
+    education: false,
+    certifications: false,
+  });
 
   const [professional_info, setProfessionalInfo] = useState({
     name: "",
@@ -72,17 +110,122 @@ const CreateResume = () => {
 
   const series = [0];
 
+  const onExpAdd = (newExperience) => {
+    addExperienceService(resumeId, newExperience).then((res) => {
+      if (res.status === 200) {
+        const newExp = res.data.experience;
+        setExperience([...experience, newExp]);
+        calculatePercentageOfSteps(res.data.steps);
+      }
+    });
+  };
+  const onExpEdit = (expId, data) => {
+    updateExperienceService(resumeId, expId, data).then((res) => {
+      if (res.status === 200) {
+        const updatedExperience = res.data.experience;
+        setExperience((prevExperience) =>
+          prevExperience.map((exp) =>
+            exp.id === expId ? updatedExperience : exp
+          )
+        );
+        calculatePercentageOfSteps(res.data.steps);
+      }
+    });
+  };
+
+  const onEducationAdd = (newEducation) => {
+    addEducationService(resumeId, newEducation).then((res) => {
+      if (res.status === 200) {
+        const newEdu = res.data.education;
+        setEduction([...education, newEdu]);
+        calculatePercentageOfSteps(res.data.steps);
+      }
+    });
+  };
+  const onEducationEdit = (eduId, data) => {
+    updateEducationService(resumeId, eduId, data).then((res) => {
+      if (res.status === 200) {
+        const updatedEdu = res.data.education;
+        setEduction((prevEdu) =>
+          prevEdu.map((edu) => (edu.id === eduId ? updatedEdu : edu))
+        );
+        calculatePercentageOfSteps(res.data.steps);
+      }
+    });
+  };
+
+  const onProjectAdd = (newProj) => {
+    addProjectsService(resumeId, newProj).then((res) => {
+      if (res.status === 200) {
+        const newProject = res.data.projects;
+        setProjects([...projects, newProject]);
+        calculatePercentageOfSteps(res.data.steps);
+      }
+    });
+  };
+  const onProjectEdit = (projId, data) => {
+    updateProjectsService(resumeId, projId, data).then((res) => {
+      if (res.status === 200) {
+        const updatedProjects = res.data.projects;
+        setProjects((prevProj) =>
+          prevProj.map((pro) => (pro.id === projId ? updatedProjects : pro))
+        );
+        calculatePercentageOfSteps(res.data.steps);
+      }
+    });
+  };
+
+  const onCertificationAdd = (newCert) => {
+    addCertificationsService(resumeId, newCert).then((res) => {
+      if (res.status === 200) {
+        const newCertification = res.data.certifications;
+        setCertifications([...certifications, newCertification]);
+        calculatePercentageOfSteps(res.data.steps);
+      }
+    });
+  };
+  const onCertificationEdit = (certId, data) => {
+    updateCertificationsService(resumeId, certId, data).then((res) => {
+      if (res.status === 200) {
+        const updatedCertifications = res.data.certifications;
+        setCertifications((prevCert) =>
+          prevCert.map((cert) =>
+            cert.id === certId ? updatedCertifications : cert
+          )
+        );
+        calculatePercentageOfSteps(res.data.steps);
+      }
+    });
+  };
+
   const currentContent = [
     <PersonalDetail
       professional_info={professional_info}
       setProfessionalInfo={setProfessionalInfo}
     />,
-    <EmploymentHistory experience={experience} setExperience={setExperience} />,
-    <Education education={education} setEduction={setEduction} />,
-    <Project projects={projects} setProjects={setProjects} />,
+    <EmploymentHistory
+      experience={experience}
+      setExperience={setExperience}
+      onExpAdd={onExpAdd}
+      onExpEdit={onExpEdit}
+    />,
+    <Education
+      education={education}
+      setEduction={setEduction}
+      onEduAdd={onEducationAdd}
+      onEduEdit={onEducationEdit}
+    />,
+    <Project
+      projects={projects}
+      setProjects={setProjects}
+      onProjAdd={onProjectAdd}
+      onProjEdit={onProjectEdit}
+    />,
     <Certificates
       certifications={certifications}
       setCertifications={setCertifications}
+      onCertAdd={onCertificationAdd}
+      onCertEdit={onCertificationEdit}
     />,
     <Skills skill_set={skill_set} setSkillsSet={setSkillsSet} />,
     <Languages languages={languages} setLanguages={setLanguages} />,
@@ -94,22 +237,65 @@ const CreateResume = () => {
     <References references={references} setReferences={setReferences} />,
   ];
 
+  const calculatePercentageOfSteps = (data) => {
+    const totalSteps = Object.keys(data).length;
+    const completedSteps = Object.values(data).filter((status) => status)
+      .length;
+    const percentage = Math.round((completedSteps / totalSteps) * 100);
+    setProgress(percentage);
+  };
   const handleNext = () => {
-    // const payload = {
-    //   professional_info,
-    //   experience,
-    //   skill_set
-    // }
-    // axiosInstance.post('/api/resume/create',payload).then(res =>{
-    //   console.log(res,"=== API Response ===")
-    // })
-
     if (currentStep === currentContent.length - 1) {
       return null;
     }
 
-    setProgress(progress + 10);
-    setCurrentStep(currentStep + 1);
+    if (currentStep === 0) {
+      if (firstTimeVisit.professional_info) {
+        updateProfessionalInfoService(resumeId, professional_info).then(
+          (res) => {
+            if (res.status === 200) {
+              setCurrentStep(currentStep + 1);
+            }
+          }
+        );
+      } else {
+        postProfessionalInfoService(resumeId, professional_info).then((res) => {
+          if (res.status === 200) {
+            setCurrentStep(currentStep + 1);
+            setFirstTimeVisit({
+              ...firstTimeVisit,
+              professional_info: true,
+            });
+          }
+        });
+      }
+    } 
+    else if(currentStep === 5){
+      if (firstTimeVisit.skills) {
+        updateSkillsService(resumeId, skill_set).then(
+          (res) => {
+            if (res.status === 200) {
+              setCurrentStep(currentStep + 1);
+              calculatePercentageOfSteps(res.data.steps);
+            }
+          }
+        );
+      } else {
+        postSkillsService(resumeId, skill_set).then((res) => {
+          if (res.status === 200) {
+            setCurrentStep(currentStep + 1);
+            setFirstTimeVisit({
+              ...firstTimeVisit,
+              skills: true,
+            });
+            calculatePercentageOfSteps(res.data.steps);
+          }
+        });
+      }
+    }
+    else {
+      setCurrentStep(currentStep + 1);
+    }
   };
 
   const handlePrev = () => {
@@ -120,6 +306,95 @@ const CreateResume = () => {
     setCurrentStep(currentStep - 1);
   };
 
+  useEffect(() => {
+    if (currentStep === 0) {
+      getStepsService(resumeId).then((resp) => {
+        if (resp.status === 200) {
+          if (resp.data) {
+            calculatePercentageOfSteps(resp.data);
+          }
+        }
+      });
+      getProfessionalInfoService(resumeId).then((resp) => {
+        if (resp.status === 200) {
+          if (resp.data?.professional_info) {
+            setProfessionalInfo({
+              ...resp.data.professional_info,
+            });
+            setFirstTimeVisit({
+              ...firstTimeVisit,
+              professional_info: true,
+            });
+          }
+        }
+      });
+    }
+    if (currentStep === 1) {
+      getExperienceService(resumeId).then((resp) => {
+        if (resp.status === 200) {
+          if (resp.data.experience.length > 0) {
+            const allExp = resp.data.experience;
+            setExperience([...allExp]);
+          }
+        }
+      });
+    }
+    if (currentStep === 2) {
+      getEducationService(resumeId).then((resp) => {
+        if (resp.status === 200) {
+          if (resp.data.education.length > 0) {
+            const allEdu = resp.data.education;
+            setEduction([...allEdu]);
+          }
+        }
+      });
+    }
+    if (currentStep === 3) {
+      getProjectsService(resumeId).then((resp) => {
+        if (resp.status === 200) {
+          if (resp.data.projects.length > 0) {
+            const allProjs = resp.data.projects;
+            setProjects([...allProjs]);
+          }
+        }
+      });
+    }
+    if (currentStep === 4) {
+      getCertificationsService(resumeId).then((resp) => {
+        if (resp.status === 200) {
+          if (resp.data.certifications.length > 0) {
+            const allCert = resp.data.certifications;
+            setEduction([...allCert]);
+          }
+        }
+      });
+    }
+    if (currentStep === 5) {
+      getSkillsService(resumeId).then((resp) => {
+        if (resp.status === 200) {
+          if (resp.data.skills?.length > 0) {
+            const skills = resp.data.skills;
+            setSkillsSet([...skills]);
+            setFirstTimeVisit({
+              ...firstTimeVisit,
+              skills: true,
+            });
+          }
+        }
+      });
+    }
+    if(currentStep === 9){
+      getReferencesService(resumeId).then((resp) => {
+        if (resp.status === 200) {
+          if (resp.data.skills?.length > 0) {
+            const newRefs = resp.data.references;
+            setReferences([...newRefs]);
+          }
+        }
+      });
+    }
+
+  }, [currentStep]);
   return (
     <>
       <Grid

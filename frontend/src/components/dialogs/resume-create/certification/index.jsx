@@ -29,7 +29,7 @@ const CertificationsAdd = ({
   setOpen,
   data,
   onFinsish,
-  index,
+  id,
   isEdit = false,
 }) => {
   // States
@@ -42,7 +42,7 @@ const CertificationsAdd = ({
 
   const onSubmit = () => {
     if (isEdit) {
-      onFinsish(index, cardData);
+      onFinsish(id, cardData);
     } else {
       onFinsish(cardData);
     }
