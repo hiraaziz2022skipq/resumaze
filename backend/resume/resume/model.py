@@ -65,7 +65,7 @@ class ProfessionalInfo(SQLModel, table=True):
 
 class SocialMedia(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    social_media: List[dict] = Field(sa_type=JSON, default=[])
+    social_media: dict = Field(sa_type=JSON, default={})
     resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
     resume: Optional[Resume] = Relationship(back_populates="social_media")
 
@@ -115,11 +115,10 @@ class LanguageProficiency(Enum):
     intermediate = "intermediate"
     advanced = "advanced"
     native = "native"
-    
+
 class Languages(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    language: str | None = None
-    proficiency: LanguageProficiency | None = Field(default=None, sa_type=SAEnum(LanguageProficiency))
+    language: List[dict[str,LanguageProficiency | str]] = Field(sa_type=JSON, default=[])
     resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
     resume: Optional[Resume] = Relationship(back_populates="languages")
 

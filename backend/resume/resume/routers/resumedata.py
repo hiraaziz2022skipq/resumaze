@@ -11,6 +11,7 @@ from typing import Optional, List, Any
 from fastapi import HTTPException
 from sqlalchemy.future import select
 from fastapi.encoders import jsonable_encoder
+from enum import Enum
 
 router = APIRouter(
     prefix="/api/resume",
@@ -38,7 +39,7 @@ class ProfessionalInfoInput(BaseModel):
     professional_summary: Optional[str] = None
 
 class SocialMediaInput(BaseModel):
-    social_media: List[dict] = []
+    social_media: dict = {}
 
 class ExperienceInput(BaseModel):
     company_name: Optional[str] = None
@@ -57,7 +58,6 @@ class EducationInput(BaseModel):
     location: Optional[str] = None
     is_current: Optional[bool] = None
 
-
 class ProjectInput(BaseModel):
     project_name: Optional[str] = None
     project_description: Optional[str] = None
@@ -71,8 +71,7 @@ class CertificationInput(BaseModel):
     end_date: Optional[str] = None
 
 class LanguageInput(BaseModel):
-    language: Optional[str] = None
-    proficiency: Optional[str] = None
+    language: List[dict[str,str]] = []
 
 class ReferenceInput(BaseModel):
     name: Optional[str] = None
@@ -246,7 +245,7 @@ def get_social_media(resume_id: int, session: db_dependency):
     resume = session.get(Resume, resume_id)
     if not resume or not resume.social_media:
         raise HTTPException(status_code=404, detail="Social media not found")
-    return JSONResponse(content=jsonable_encoder({"social_media": resume.social_media.model_dump()}))
+    return resume.social_media
 
 @router.post("/{resume_id}/social-media", response_model=SocialMedia)
 def post_social_media(resume_id: int, social_media: SocialMediaInput, session: db_dependency):
@@ -287,9 +286,21 @@ def get_experience(resume_id: int, session: db_dependency):
     resume = session.get(Resume, resume_id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    experiences = session.exec(select(Experience).where(Experience.resume_id == resume_id)).all()
-    return JSONResponse(content=jsonable_encoder({"experience": [exp.model_dump() for exp in experiences]}))
-
+    results = session.exec(select(Experience).where(Experience.resume_id == resume_id)).all()
+    experiences = [result[0] for result in results]
+    experiences_schema = [
+        Experience(
+            id=exp.id,
+            company_name=exp.company_name,
+            job_title=exp.job_title,
+            start_date=exp.start_date,
+            end_date=exp.end_date,
+            resume_id=exp.resume_id
+        )
+        for exp in experiences
+    ]
+    return experiences_schema
+    
 @router.post("/{resume_id}/experience", response_model=Experience)
 def add_experience(resume_id: int, experience: ExperienceInput, session: db_dependency):
     resume = session.get(Resume, resume_id)
@@ -299,7 +310,7 @@ def add_experience(resume_id: int, experience: ExperienceInput, session: db_depe
     new_experience = Experience(**experience.model_dump(), resume_id=resume_id)
     session.add(new_experience)
     
-    mandatory_fields = ["company_name", "job_title", "start_date", "end_date"]
+    mandatory_fields = ["company_name", "job_title", "start_date"]
     is_complete = all_mandatory_fields_filled(experience.model_dump(), mandatory_fields)
     update_resume_steps(resume_id, "experience", session, is_complete)
     
@@ -317,7 +328,7 @@ def update_experience(resume_id: int, experience_id: int, experience: Experience
     for field, value in experience.model_dump(exclude_unset=True).items():
         setattr(db_experience, field, value)
     
-    mandatory_fields = ["company_name", "job_title", "start_date", "end_date"]
+    mandatory_fields = ["company_name", "job_title", "start_date"]
     is_complete = all_mandatory_fields_filled(db_experience.model_dump(), mandatory_fields)
     update_resume_steps(resume_id, "experience", session, is_complete)
     
@@ -364,7 +375,7 @@ def add_education(resume_id: int, education: EducationInput, session: db_depende
     new_education = Education(**education.model_dump(), resume_id=resume_id)
     session.add(new_education)
     
-    mandatory_fields = ["institute_name", "degree", "start_date", "end_date"]
+    mandatory_fields = ["institute_name", "degree", "start_date"]
     is_complete = all_mandatory_fields_filled(education.model_dump(), mandatory_fields)
     update_resume_steps(resume_id, "education", session, is_complete)
     
@@ -382,7 +393,7 @@ def update_education(resume_id: int, education_id: int, education: EducationInpu
     for field, value in education.model_dump(exclude_unset=True).items():
         setattr(db_education, field, value)
 
-    mandatory_fields = ["institute_name", "degree", "start_date", "end_date"]
+    mandatory_fields = ["institute_name", "degree", "start_date"]
     is_complete = all_mandatory_fields_filled(education.model_dump(), mandatory_fields)
     update_resume_steps(resume_id, "education", session, is_complete)
     
@@ -469,7 +480,6 @@ def get_certifications(resume_id: int, session: db_dependency):
     ]
     return certifications_schema
     
-
 @router.post("/{resume_id}/certifications", response_model=Certifications)
 def add_certifications(resume_id: int, certifications: CertificationInput, session: db_dependency):
     resume = session.get(Resume, resume_id)
@@ -505,23 +515,25 @@ def update_certifications(resume_id: int, certifications_id: int, certifications
     return JSONResponse(content=jsonable_encoder({"certifications": db_certifications.model_dump(), "steps": steps}))
 
 # languages route
-@router.get("/{resume_id}/languages",response_model=list[Languages])
+@router.get("/{resume_id}/languages", response_model=Languages)
 def get_languages(resume_id: int, session: db_dependency):
     resume = session.get(Resume, resume_id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    results = session.exec(select(Languages).where(Languages.resume_id == resume_id)).all()
-    languages = [result[0] for result in results]
-    languages_schema = [
-        Languages(
-            id=lang.id,
-            language=lang.language,
-            proficiency=lang.proficiency,
-            resume_id=lang.resume_id
-        )
-        for lang in languages
-    ]
-    return languages_schema
+
+    # Fetch a single language entry
+    statement = select(Languages).where(Languages.resume_id == resume_id)
+    language_entry = session.exec(statement).first()
+    print(language_entry)
+    if not language_entry:
+        raise HTTPException(status_code=404, detail="Language entry not found for this resume")
+    language_entry = language_entry[0]
+    # Return a `Languages` model with the data from `language_entry`
+    return Languages(
+        id=language_entry.id,
+        language=language_entry.language,
+        resume_id=language_entry.resume_id
+    )
 
 @router.post("/{resume_id}/languages", response_model=Languages)
 def add_languages(resume_id: int, languages: LanguageInput, session: db_dependency):
@@ -530,6 +542,7 @@ def add_languages(resume_id: int, languages: LanguageInput, session: db_dependen
         raise HTTPException(status_code=404, detail="Resume not found")
     
     new_languages = Languages(**languages.model_dump(), resume_id=resume_id)
+    print("new_languages",new_languages)
     session.add(new_languages)
     
     is_complete = bool(languages.language)
@@ -537,11 +550,12 @@ def add_languages(resume_id: int, languages: LanguageInput, session: db_dependen
     
     session.commit()
     session.refresh(new_languages)
+    print("new_languages refresh",new_languages)
     steps = get_resume_steps(resume_id, session)
     return JSONResponse(content=jsonable_encoder({"languages": new_languages.model_dump(), "steps": steps}))
 
 @router.put("/{resume_id}/languages/{languages_id}", response_model=Languages)
-def update_languages(resume_id: int, languages_id: int, languages: LanguageInput, session: db_dependency):
+def update_languages(resume_id: int, languages_id: int, languages: Languages, session: db_dependency):
     db_languages = session.get(Languages, languages_id)
     if not db_languages or db_languages.resume_id != resume_id:
         raise HTTPException(status_code=404, detail="Languages not found")
