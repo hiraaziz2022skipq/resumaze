@@ -15,3 +15,4 @@ except FileNotFoundError:
 
 
 DATABASE_URL = config("DATABASE_URL", cast=Secret)
+LAMAAPI_KEY = config("LAMAAPI_KEY", cast=Secret)

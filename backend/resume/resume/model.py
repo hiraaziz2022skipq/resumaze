@@ -82,15 +82,15 @@ class Experience(SQLModel, table=True):
     resume: Optional[Resume] = Relationship(back_populates="experience")
 
 class Education(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     institute_name: str | None = None
     degree: str | None = None
     start_date: str | None = None
     end_date: str | None = None
-    location: str | None = None
-    is_current: bool | None = None
+    location: Optional[str] = None
+    is_current: Optional[bool] = None
     resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
-    resume: Optional[Resume] = Relationship(back_populates="education")
+    resume: Resume = Relationship(back_populates="education")
 
 class Projects(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
