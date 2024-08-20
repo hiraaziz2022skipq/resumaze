@@ -8,13 +8,16 @@ import StepLabel from '@mui/material/StepLabel';
 
 const steps = [
   'Personal Details',
-  'Professional Summary',
   'Employment History',
+  "Education",
+  "Projects",
+  'Certifications',
   'Skills',
-  'Personal Details',
+  "Languages",
   'Professional Summary',
-  'Employment History',
-  'Skills'
+  'Social Media',
+  'References',
+  'Extra Info',
 ];
 
 export default function HorizontalLinearAlternativeLabelStepper({currentStep , setCurrentStep}) {

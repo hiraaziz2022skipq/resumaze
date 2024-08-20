@@ -2,10 +2,14 @@ import React, { useState } from "react";
 import MUIRichTextEditor from "mui-rte";
 import { Card, CardContent } from "@mui/material";
 
-const RichTextEditor = (props) => {
+const RichTextEditor = ({data , setData}) => {
+
   const [state, setState] = useState({ editorState: null });
 
+
+  console.log(state,"----state==")
   const save = (data) => {
+    console.log(data)
     console.log(state.getCurrentContent());
   };
 

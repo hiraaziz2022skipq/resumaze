@@ -5,15 +5,12 @@ import { useState } from 'react'
 
 import { Autocomplete, CardContent, Chip, Grid, TextField } from "@mui/material"
 
-// Vars
-const languages = []
 
-const Skills = () => {
-  const initialData = {
-    language: ['english'],
-  }
+const Skills = ({skill_set , setSkillsSet}) => {
 
-  const [userData, setUserData] = useState(initialData)
+  const handleChange = (event, newValue) => {
+    setSkillsSet(newValue);
+  };
 
   return (
     <CardContent>
@@ -21,8 +18,8 @@ const Skills = () => {
       <Autocomplete
         multiple
         freeSolo
-        value={userData.language}
-        onChange={(event, newValue) => setUserData({ ...userData, language: newValue })}
+        value={skill_set}
+        onChange={handleChange}
         renderTags={(value, getTagProps) =>
           value.map((option, index) => (
             <Chip
@@ -42,7 +39,7 @@ const Skills = () => {
             placeholder="Add Skills"
           />
         )}
-        options={languages}
+        options={[]}
         getOptionLabel={(option) => option}
       />
     </Grid>
