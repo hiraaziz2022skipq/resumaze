@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Annotated
 from fastapi import Depends, HTTPException, APIRouter
 from fastapi.responses import JSONResponse
@@ -6,15 +5,10 @@ from sqlmodel import Session, SQLModel
 from starlette import status 
 from resume.db import engine
 from resume.model import User
-from dotenv import load_dotenv
-from sqlmodel import Field
-import os 
 from resume.model import Resume, ProfessionalInfo, SocialMedia, Experience, Education, Projects, Certifications, Languages, References, ExtraInfo, ResumeSteps
-from datetime import datetime
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Any
 from fastapi import HTTPException
-from sqlalchemy.orm import selectinload
 from sqlalchemy.future import select
 from fastapi.encoders import jsonable_encoder
 
@@ -62,6 +56,7 @@ class EducationInput(BaseModel):
     end_date: Optional[str] = None
     location: Optional[str] = None
     is_current: Optional[bool] = None
+
 
 class ProjectInput(BaseModel):
     project_name: Optional[str] = None
@@ -331,15 +326,34 @@ def update_experience(resume_id: int, experience_id: int, experience: Experience
     steps = get_resume_steps(resume_id, session)
     return JSONResponse(content=jsonable_encoder({"experience": db_experience.model_dump(), "steps": steps}))
 
-
+        
 # education route
-@router.get("/{resume_id}/education")
+@router.get("/{resume_id}/education",response_model=list[Education])
 def get_education(resume_id: int, session: db_dependency):
     resume = session.get(Resume, resume_id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    educations = session.exec(select(Education).where(Education.resume_id == resume_id)).all()
-    return JSONResponse(content=jsonable_encoder({"education": [edu.model_dump() for edu in educations]}))
+    
+    results = session.exec(select(Education).where(Education.resume_id == resume_id)).all()
+    # Extract Education objects from the tuples
+    educations = [result[0] for result in results]
+
+    # Convert SQLAlchemy ORM objects to Pydantic schemas
+    educations_schema = [
+        Education(
+            id=edu.id,
+            institute_name=edu.institute_name,
+            degree=edu.degree,
+            start_date=edu.start_date,
+            end_date=edu.end_date,
+            location=edu.location,
+            is_current=edu.is_current,
+            resume_id=edu.resume_id
+        )
+        for edu in educations
+    ]
+
+    return educations_schema
 
 @router.post("/{resume_id}/education", response_model=Education)
 def add_education(resume_id: int, education: EducationInput, session: db_dependency):
@@ -379,13 +393,25 @@ def update_education(resume_id: int, education_id: int, education: EducationInpu
 
 
 # projects route
-@router.get("/{resume_id}/projects")
+@router.get("/{resume_id}/projects",response_model=List[Projects])
 def get_projects(resume_id: int, session: db_dependency):
     resume = session.get(Resume, resume_id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    projects = session.exec(select(Projects).where(Projects.resume_id == resume_id)).all()
-    return JSONResponse(content=jsonable_encoder({"projects": [proj.model_dump() for proj in projects]}))
+    results = session.exec(select(Projects).where(Projects.resume_id == resume_id)).all()
+    projects = [result[0] for result in results]
+    projects_schema = [
+        Projects(
+            id=proj.id,
+            project_name=proj.project_name,
+            project_description=proj.project_description,
+            start_date=proj.start_date,
+            end_date=proj.end_date,
+            resume_id=proj.resume_id
+        )
+        for proj in projects
+    ]
+    return projects_schema
 
 @router.post("/{resume_id}/projects", response_model=Projects)
 def add_projects(resume_id: int, projects: ProjectInput, session: db_dependency):
@@ -423,13 +449,26 @@ def update_projects(resume_id: int, projects_id: int, projects: ProjectInput, se
 
 
 # certifications route
-@router.get("/{resume_id}/certifications")
+@router.get("/{resume_id}/certifications",response_model=List[Certifications])
 def get_certifications(resume_id: int, session: db_dependency):
     resume = session.get(Resume, resume_id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    certifications = session.exec(select(Certifications).where(Certifications.resume_id == resume_id)).all()
-    return JSONResponse(content=jsonable_encoder({"certifications": [cert.model_dump() for cert in certifications]}))
+    results = session.exec(select(Certifications).where(Certifications.resume_id == resume_id)).all()
+    certifications = [result[0] for result in results]
+    certifications_schema = [
+        Certifications(
+            id=cert.id,
+            certification_name=cert.certification_name,
+            certification_link=cert.certification_link,
+            start_date=cert.start_date,
+            end_date=cert.end_date,
+            resume_id=cert.resume_id
+        )
+        for cert in certifications
+    ]
+    return certifications_schema
+    
 
 @router.post("/{resume_id}/certifications", response_model=Certifications)
 def add_certifications(resume_id: int, certifications: CertificationInput, session: db_dependency):
@@ -466,13 +505,23 @@ def update_certifications(resume_id: int, certifications_id: int, certifications
     return JSONResponse(content=jsonable_encoder({"certifications": db_certifications.model_dump(), "steps": steps}))
 
 # languages route
-@router.get("/{resume_id}/languages")
+@router.get("/{resume_id}/languages",response_model=list[Languages])
 def get_languages(resume_id: int, session: db_dependency):
     resume = session.get(Resume, resume_id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    languages = session.exec(select(Languages).where(Languages.resume_id == resume_id)).all()
-    return JSONResponse(content=jsonable_encoder({"languages": [lang.model_dump() for lang in languages]}))
+    results = session.exec(select(Languages).where(Languages.resume_id == resume_id)).all()
+    languages = [result[0] for result in results]
+    languages_schema = [
+        Languages(
+            id=lang.id,
+            language=lang.language,
+            proficiency=lang.proficiency,
+            resume_id=lang.resume_id
+        )
+        for lang in languages
+    ]
+    return languages_schema
 
 @router.post("/{resume_id}/languages", response_model=Languages)
 def add_languages(resume_id: int, languages: LanguageInput, session: db_dependency):
@@ -510,13 +559,26 @@ def update_languages(resume_id: int, languages_id: int, languages: LanguageInput
 
 
 # do not add resume steps in reference and extra info 
-@router.get("/{resume_id}/references")
+@router.get("/{resume_id}/references",response_model=list[References])
 def get_references(resume_id: int, session: db_dependency):
     resume = session.get(Resume, resume_id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    references = session.exec(select(References).where(References.resume_id == resume_id)).all()
-    return JSONResponse(content=jsonable_encoder({"references": [ref.model_dump() for ref in references]}))
+    results = session.exec(select(References).where(References.resume_id == resume_id)).all()
+    references = [result[0] for result in results]
+    references_schema = [
+        References(
+            id=ref.id,
+            name=ref.name,
+            email=ref.email,
+            phone=ref.phone,
+            relationship=ref.relationship,
+            resume_id=ref.resume_id
+        )
+        for ref in references
+    ]
+    return references_schema
+    
 
 @router.post("/{resume_id}/references", response_model=References)
 def add_references(resume_id: int, references: ReferenceInput, session: db_dependency):
@@ -547,13 +609,23 @@ def update_references(resume_id: int, references_id: int, references: ReferenceI
 
 
 # extra info route
-@router.get("/{resume_id}/extra-info")
+@router.get("/{resume_id}/extra-info",response_model=list[ExtraInfo])
 def get_extra_info(resume_id: int, session: db_dependency):
     resume = session.get(Resume, resume_id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    extra_info = session.exec(select(ExtraInfo).where(ExtraInfo.resume_id == resume_id)).all()
-    return JSONResponse(content=jsonable_encoder({"extra_info": [info.model_dump() for info in extra_info]}))
+    results = session.exec(select(ExtraInfo).where(ExtraInfo.resume_id == resume_id)).all()
+    extra_info = [result[0] for result in results]
+    extra_info_schema = [
+        ExtraInfo(
+            id=info.id,
+            key=info.key,
+            value=info.value,
+            resume_id=info.resume_id
+        )
+        for info in extra_info
+    ]
+    return extra_info_schema
 
 @router.post("/{resume_id}/extra-info", response_model=ExtraInfo)
 def add_extra_info(resume_id: int, extra_info: ExtraInfoInput, session: db_dependency):

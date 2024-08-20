@@ -6,7 +6,6 @@ from sqlmodel import SQLModel
 
 from alembic import context
 from resume.model import Resume, ProfessionalInfo, SocialMedia, Experience, Education, Projects, Certifications, Languages, References, ExtraInfo, ResumeSteps
-
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -20,7 +19,6 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-# from resume.main import Resume
 target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
