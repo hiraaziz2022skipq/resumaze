@@ -5,7 +5,7 @@ from sqlmodel import Session, SQLModel
 from starlette import status 
 from resume.db import engine
 from resume.model import User
-from resume.model import Resume, ProfessionalInfo, SocialMedia, Experience, Education, Projects, Certifications, Languages, References, ExtraInfo, ResumeSteps
+from resume.model import Resume, ProfessionalInfo, SocialMedia, Experience, Education, Projects, Certifications, Languages, References, ExtraInfo, ResumeSteps, CoverLetter
 from pydantic import BaseModel
 from typing import Optional, List, Any
 from fastapi import HTTPException
@@ -87,7 +87,6 @@ class UserInput(BaseModel):
     name: str
     email: str
     password: str
-
 
 # Helper function to update resume steps
 def update_resume_steps(resume_id: int, field: str, session: Session, is_complete: bool):
@@ -287,6 +286,7 @@ def get_experience(resume_id: int, session: db_dependency):
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
     results = session.exec(select(Experience).where(Experience.resume_id == resume_id)).all()
+    print(results)
     experiences = [result[0] for result in results]
     experiences_schema = [
         Experience(
@@ -337,6 +337,21 @@ def update_experience(resume_id: int, experience_id: int, experience: Experience
     steps = get_resume_steps(resume_id, session)
     return JSONResponse(content=jsonable_encoder({"experience": db_experience.model_dump(), "steps": steps}))
 
+@router.delete("/{resume_id}/experience/{experience_id}", status_code=204)
+def delete_experience(resume_id: int, experience_id: int, session: db_dependency):
+    db_experience = session.get(Experience, experience_id)
+    if not db_experience or db_experience.resume_id != resume_id:
+        raise HTTPException(status_code=404, detail="Experience not found")
+    
+    session.delete(db_experience)
+    session.commit()
+    
+    # Check if there are any remaining experiences
+    remaining_experiences = session.exec(select(Experience).where(Experience.resume_id == resume_id)).first()
+    update_resume_steps(resume_id, "experience", session, bool(remaining_experiences))
+    
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"message": "Experience deleted successfully", "steps": steps}))
         
 # education route
 @router.get("/{resume_id}/education",response_model=list[Education])
@@ -402,6 +417,21 @@ def update_education(resume_id: int, education_id: int, education: EducationInpu
     steps = get_resume_steps(resume_id, session)
     return JSONResponse(content=jsonable_encoder({"education": db_education.model_dump(), "steps": steps}))
 
+@router.delete("/{resume_id}/education/{education_id}", status_code=204)
+def delete_education(resume_id: int, education_id: int, session: db_dependency):
+    db_education = session.get(Education, education_id)
+    if not db_education or db_education.resume_id != resume_id:
+        raise HTTPException(status_code=404, detail="Education not found")
+    
+    session.delete(db_education)
+    session.commit()
+    
+    # Check if there are any remaining education entries
+    remaining_education = session.exec(select(Education).where(Education.resume_id == resume_id)).first()
+    update_resume_steps(resume_id, "education", session, bool(remaining_education))
+    
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"message": "Education deleted successfully", "steps": steps}))
 
 # projects route
 @router.get("/{resume_id}/projects",response_model=List[Projects])
@@ -458,6 +488,21 @@ def update_projects(resume_id: int, projects_id: int, projects: ProjectInput, se
     steps = get_resume_steps(resume_id, session)
     return JSONResponse(content=jsonable_encoder({"projects": db_projects.model_dump(), "steps": steps}))
 
+@router.delete("/{resume_id}/projects/{project_id}", status_code=204)
+def delete_project(resume_id: int, project_id: int, session: db_dependency):
+    db_project = session.get(Projects, project_id)
+    if not db_project or db_project.resume_id != resume_id:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    session.delete(db_project)
+    session.commit()
+    
+    # Check if there are any remaining projects
+    remaining_projects = session.exec(select(Projects).where(Projects.resume_id == resume_id)).first()
+    update_resume_steps(resume_id, "projects", session, bool(remaining_projects))
+    
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"message": "Project deleted successfully", "steps": steps}))
 
 # certifications route
 @router.get("/{resume_id}/certifications",response_model=List[Certifications])
@@ -513,6 +558,22 @@ def update_certifications(resume_id: int, certifications_id: int, certifications
     session.refresh(db_certifications)
     steps = get_resume_steps(resume_id, session)
     return JSONResponse(content=jsonable_encoder({"certifications": db_certifications.model_dump(), "steps": steps}))
+
+@router.delete("/{resume_id}/certifications/{certification_id}", status_code=204)
+def delete_certification(resume_id: int, certification_id: int, session: db_dependency):
+    db_certification = session.get(Certifications, certification_id)
+    if not db_certification or db_certification.resume_id != resume_id:
+        raise HTTPException(status_code=404, detail="Certification not found")
+    
+    session.delete(db_certification)
+    session.commit()
+    
+    # Check if there are any remaining certifications
+    remaining_certifications = session.exec(select(Certifications).where(Certifications.resume_id == resume_id)).first()
+    update_resume_steps(resume_id, "certifications", session, bool(remaining_certifications))
+    
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"message": "Certification deleted successfully", "steps": steps}))
 
 # languages route
 @router.get("/{resume_id}/languages", response_model=Languages)
@@ -593,7 +654,6 @@ def get_references(resume_id: int, session: db_dependency):
     ]
     return references_schema
     
-
 @router.post("/{resume_id}/references", response_model=References)
 def add_references(resume_id: int, references: ReferenceInput, session: db_dependency):
     resume = session.get(Resume, resume_id)
@@ -621,6 +681,17 @@ def update_references(resume_id: int, references_id: int, references: ReferenceI
     steps = get_resume_steps(resume_id, session)
     return JSONResponse(content=jsonable_encoder({"references": db_references.model_dump(), "steps": steps}))
 
+@router.delete("/{resume_id}/references/{reference_id}", status_code=204)
+def delete_reference(resume_id: int, reference_id: int, session: db_dependency):
+    db_reference = session.get(References, reference_id)
+    if not db_reference or db_reference.resume_id != resume_id:
+        raise HTTPException(status_code=404, detail="Reference not found")
+    
+    session.delete(db_reference)
+    session.commit()
+    
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"message": "Reference deleted successfully", "steps": steps}))
 
 # extra info route
 @router.get("/{resume_id}/extra-info",response_model=list[ExtraInfo])
@@ -668,3 +739,60 @@ def update_extra_info(resume_id: int, extra_info_id: int, extra_info: ExtraInfoI
     steps = get_resume_steps(resume_id, session)
     return JSONResponse(content=jsonable_encoder({"extra_info": db_extra_info.model_dump(), "steps": steps}))
 
+# Cover letter route
+class CoverLetterInput(BaseModel):
+    title: str
+    content: str
+
+@router.get("/user/{user_id}/cover-letters", response_model=List[CoverLetter])
+def get_cover_letters(user_id: int, session: db_dependency):
+    results = session.exec(select(CoverLetter).where(CoverLetter.user_id == user_id)).all()
+    print("results  : ",results)
+    cover_letters = [result[0] for result in results]
+    cover_letters_schema = [
+        CoverLetter(
+            id=cover_letter.id,
+            title=cover_letter.title,
+            content=cover_letter.content,
+            user_id=cover_letter.user_id
+        )
+        for cover_letter in cover_letters
+    ]
+    return cover_letters_schema
+
+@router.post("/user/{user_id}/cover-letters", response_model=CoverLetter)
+def create_cover_letter(user_id: int, cover_letter: CoverLetterInput, session: db_dependency):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    new_cover_letter = CoverLetter(**cover_letter.model_dump(), user_id=user_id)
+    print("new_cover_letter : ",new_cover_letter)
+    session.add(new_cover_letter)
+    session.commit()
+    session.refresh(new_cover_letter)
+    print("new_cover_letter refresh : ",new_cover_letter)
+    return new_cover_letter
+
+@router.put("/user/{user_id}/cover-letters/{cover_letter_id}", response_model=CoverLetter)
+def update_cover_letter(user_id: int, cover_letter_id: int, cover_letter: CoverLetterInput, session: db_dependency):
+    db_cover_letter = session.get(CoverLetter, cover_letter_id)
+    if not db_cover_letter or db_cover_letter.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Cover letter not found")
+    
+    for field, value in cover_letter.model_dump().items():
+        setattr(db_cover_letter, field, value)
+    
+    session.commit()
+    session.refresh(db_cover_letter)
+    return db_cover_letter
+
+@router.delete("/user/{user_id}/cover-letters/{cover_letter_id}", status_code=204)
+def delete_cover_letter(user_id: int, cover_letter_id: int, session: db_dependency):
+    db_cover_letter = session.get(CoverLetter, cover_letter_id)
+    if not db_cover_letter or db_cover_letter.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Cover letter not found")
+    
+    session.delete(db_cover_letter)
+    session.commit()
+    return {"cover_letter_deleted": True}

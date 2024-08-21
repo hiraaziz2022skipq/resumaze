@@ -18,13 +18,15 @@ class User(SQLModel, table=True):
     hashed_password: str = Field(max_length=255, min_length=6)
     role: UserRole = Field(default=UserRole.employee, sa_type=SAEnum(UserRole))
     created_at: datetime = Field(default=datetime.utcnow())
-    resumes: int | None = Field(default=None, foreign_key="resume.id")
+    resumes: List["Resume"] = Relationship(back_populates="user")
+    cover_letters: List["CoverLetter"] = Relationship(back_populates="user")
 
 class Resume(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="user.id")
     skill_set: Optional[List[str]] = Field(sa_type=JSON, default=None)
     created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
-    
+    user: Optional[User] = Relationship(back_populates="resumes")
     steps: Optional["ResumeSteps"] = Relationship(back_populates="resume", sa_relationship_kwargs={"uselist": False})
     professional_info: Optional["ProfessionalInfo"] = Relationship(back_populates="resume", sa_relationship_kwargs={"uselist": False})
     social_media: Optional["SocialMedia"] = Relationship(back_populates="resume", sa_relationship_kwargs={"uselist": False})
@@ -137,3 +139,11 @@ class ExtraInfo(SQLModel, table=True):
     value: str | None = None
     resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
     resume: Optional[Resume] = Relationship(back_populates="extra_info")
+
+class CoverLetter(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str | None = None
+    content: str
+    created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
+    user_id: int = Field(foreign_key="user.id")
+    user: Optional[User] = Relationship(back_populates="cover_letters")
