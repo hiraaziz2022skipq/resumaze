@@ -20,14 +20,20 @@ const References = ({ references, setReferences }) => {
   };
 
   const onDelete = (index) => {
-    const updatedRef = references.filter((_, i) => i !== index);
-    setReferences(updatedRef);
+    // const updatedRef = references.filter((_, i) => i !== index);
+    // setReferences(updatedRef);
   };
 
   const onAdd = (newRef) => {
     const newCertArray = [...references, newRef];
     setReferences(newCertArray);
   };
+
+  const iconButtonProps = {
+    children: <i className="ri-edit-box-line" />,
+    className: "text-textSecondary",
+  };
+
 
   return (
     <>
@@ -57,12 +63,22 @@ const References = ({ references, setReferences }) => {
                     <Typography variant="body2">{ref.email}</Typography>
                   </div>
                 </div>
-                <IconButton
-                  onClick={() => onDelete(index)}
-                  className="ml-4" // Adds margin to the left of the icon
-                >
-                  <i className="ri-delete-bin-7-line text-textSecondary" />
-                </IconButton>
+                <div className="mis-10">
+                  <IconButton
+                    onClick={() => onDelete(index)}
+                    className="ml-4" // Adds margin to the left of the icon
+                  >
+                    <i className="ri-delete-bin-7-line text-textSecondary" />
+                  </IconButton>
+                  <OpenDialogOnElementClick
+                    element={IconButton}
+                    elementProps={iconButtonProps}
+                    dialog={ReferenceAdd}
+                    dialogProps={{
+                     
+                    }}
+                  />
+                </div>
               </div>
               <Divider orientation="horizontal" className="mt-2" />
             </Grid>

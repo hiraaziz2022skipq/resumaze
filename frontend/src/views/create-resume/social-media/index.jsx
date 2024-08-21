@@ -40,31 +40,12 @@ const SocialMedia = ({ social_media, setSocialmedia }) => {
                     onChange={(e) => handleFormChange("github", e.target.value)}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Github"
-                    value={social_media.github}
-                    placeholder="Github"
-                    onChange={(e) => handleFormChange("github", e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Twitter"
-                    value={social_media.twitter}
-                    placeholder="Twitter"
-                    onChange={(e) =>
-                      handleFormChange("twitter", e.target.value)
-                    }
-                  />
-                </Grid>
+          
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
                     label="Facebook"
-                    value={social_media.github}
+                    value={social_media.facebook}
                     placeholder="Facebook"
                     onChange={(e) =>
                       handleFormChange("facebook", e.target.value)
@@ -75,7 +56,7 @@ const SocialMedia = ({ social_media, setSocialmedia }) => {
                   <TextField
                     fullWidth
                     label="Instagram"
-                    value={social_media.address}
+                    value={social_media.instagram}
                     placeholder="Instagram"
                     onChange={(e) =>
                       handleFormChange("instagram", e.target.value)
@@ -97,7 +78,7 @@ const SocialMedia = ({ social_media, setSocialmedia }) => {
                   <TextField
                     fullWidth
                     label="Website"
-                    value={social_media.youtube}
+                    value={social_media.website}
                     placeholder="Website"
                     onChange={(e) =>
                       handleFormChange("website", e.target.value)

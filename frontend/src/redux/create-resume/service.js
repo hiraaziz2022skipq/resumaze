@@ -83,7 +83,7 @@ export const updateProfessionalInfoService = async (resumeId, data) => {
 export const getSocialMediaService = async (resumeId) => {
   try {
     const response = await axiosInstance.get(`/api/resume/${resumeId}/social-media`);
-    return response.data;
+    return response;
   } catch (error) {
     return error;
   }
@@ -92,7 +92,7 @@ export const getSocialMediaService = async (resumeId) => {
 export const postSocialMediaService = async (resumeId, data) => {
   try {
     const response = await axiosInstance.post(`/api/resume/${resumeId}/social-media`, data);
-    return response.data;
+    return response;
   } catch (error) {
     return error;
   }
@@ -101,7 +101,7 @@ export const postSocialMediaService = async (resumeId, data) => {
 export const updateSocialMediaService = async (resumeId, data) => {
   try {
     const response = await axiosInstance.put(`/api/resume/${resumeId}/social-media`, data);
-    return response.data;
+    return response;
   } catch (error) {
     return error;
   }
@@ -111,7 +111,7 @@ export const updateSocialMediaService = async (resumeId, data) => {
 export const getExperienceService = async (resumeId) => {
   try {
     const response = await axiosInstance.get(`/api/resume/${resumeId}/experience`);
-    return response.data;
+    return response;
   } catch (error) {
     return error;
   }

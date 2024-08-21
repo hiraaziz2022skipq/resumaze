@@ -17,7 +17,7 @@ const steps = [
   'Professional Summary',
   'Social Media',
   'References',
-  'Extra Info',
+  // 'Extra Info',
 ];
 
 export default function HorizontalLinearAlternativeLabelStepper({currentStep , setCurrentStep}) {
