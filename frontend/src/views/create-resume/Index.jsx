@@ -205,6 +205,10 @@ const CreateResume = () => {
     });
   };
 
+  const allData = {
+    experiences:experience,
+    skills:skill_set,
+  }
   const currentContent = [
     <PersonalDetail
       professional_info={professional_info}
@@ -237,6 +241,9 @@ const CreateResume = () => {
     <Skills skill_set={skill_set} setSkillsSet={setSkillsSet} />,
     <Languages languages={languages} setLanguages={setLanguages} />,
     <PersonalSummary
+      allData={
+       allData
+      }
       professional_info={professional_info}
       setProfessionalInfo={setProfessionalInfo}
     />,

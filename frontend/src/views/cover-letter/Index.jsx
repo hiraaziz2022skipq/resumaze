@@ -1,5 +1,5 @@
 'use client'
-import { Grid } from "@mui/material";
+import { Button, Grid } from "@mui/material";
 import CreateCoverLetter from "./CreateCoverLetter";
 import CoverGeneratedDetail from "./CoverGeneratedDetail";
 import { useState } from "react";
@@ -78,10 +78,13 @@ const CoverLetterPage = () =>{
             <Grid container spacing={6}>
               <Grid item xs={12}>
                 <CoverGeneratedDetail data={coverLetter.content} title={coverLetter.title}/>
+              
               </Grid>
-            
+              
             </Grid>
+           
           </Grid>
+
         </Grid>
       )
 }

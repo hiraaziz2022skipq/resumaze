@@ -1,5 +1,5 @@
 'use client'
-import { Card, CardContent, CardHeader, Divider, Grid, TextField, Typography } from "@mui/material"
+import { Button, Card, CardContent, CardHeader, Divider, Grid, TextField, Typography } from "@mui/material"
 // Third-party Imports
 import classnames from 'classnames'
 import { useEditor, EditorContent } from '@tiptap/react'
@@ -8,6 +8,8 @@ import { Underline } from '@tiptap/extension-underline'
 import { Placeholder } from '@tiptap/extension-placeholder'
 import { TextAlign } from '@tiptap/extension-text-align'
 
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 
 // Style Imports
@@ -138,6 +140,32 @@ const EditorToolbar = ({ editor }) => {
         }
       }, [editor, data]);
 
+      const exportToPDF = async () => {
+        if (!editor) return;
+      
+        try {
+          // Get the editor content as plain text
+          const content = editor.getText(); // Use `getText` if your content is plain text
+      
+          // Create a new jsPDF instance
+          const pdf = new jsPDF({
+            orientation: 'p', // Portrait
+            unit: 'mm',
+            format: 'a4' // A4 size
+          });
+      
+          // Add content to PDF
+          pdf.text(content, 10, 10); // Adjust x and y positions as needed
+          pdf.save('document.pdf');
+      
+        } catch (error) {
+          console.error('Error generating PDF:', error);
+        }
+      };
+      
+      
+
+
     return (
         <Card>
           <CardHeader title='Cover Letter Detail' />
@@ -151,6 +179,15 @@ const EditorToolbar = ({ editor }) => {
               </CardContent>
             </Card>
           </CardContent>
+          <Button
+                variant='contained'
+                aria-haspopup='true'
+                endIcon={<i className='ri-upload-2-line' />}
+                onClick={exportToPDF}
+                style={{ float: 'right' }}
+            >
+                Export
+            </Button>
         </Card>
       )
 }
