@@ -442,6 +442,9 @@ const CreateResume = () => {
               <Button variant='outlined' color='secondary' sx={{ mr: 1 }} onClick={handlePrev}>
                 Back
               </Button>
+              <Button  variant="outlined"
+                color="secondary" onClick={handleNext}>
+                {currentStep !== currentContent.length - 1  ? "Next" :  "Finish"}
               <Button variant='contained' onClick={handleNext}>
                 {currentStep !== currentContent.length - 1 ? 'Next' : 'Finish'}
               </Button>

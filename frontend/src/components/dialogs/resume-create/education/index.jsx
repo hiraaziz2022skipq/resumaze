@@ -114,7 +114,7 @@ const EducationAdd = ({
                     }
                   />
                 }
-                label="Are you working studying?"
+                label="Are you Currently studying?"
               />
             </Grid>
 

@@ -2,11 +2,10 @@
 
 import axiosInstance from "@/utils/axiosInstance";
 
-
 // Resume Service
 export const createUserService = async (data) => {
   try {
-    const response = await axiosInstance.post('/api/resume/create-user', data);
+    const response = await axiosInstance.post("/api/resume/create-user", data);
     return response.data;
   } catch (error) {
     return error;
@@ -35,7 +34,10 @@ export const getSkillsService = async (resumeId) => {
 
 export const postSkillsService = async (resumeId, data) => {
   try {
-    const response = await axiosInstance.post(`/api/resume/${resumeId}/skills`, data);
+    const response = await axiosInstance.post(
+      `/api/resume/${resumeId}/skills`,
+      data
+    );
     return response;
   } catch (error) {
     return error;
@@ -44,7 +46,10 @@ export const postSkillsService = async (resumeId, data) => {
 
 export const updateSkillsService = async (resumeId, data) => {
   try {
-    const response = await axiosInstance.put(`/api/resume/${resumeId}/skills`, data);
+    const response = await axiosInstance.put(
+      `/api/resume/${resumeId}/skills`,
+      data
+    );
     return response;
   } catch (error) {
     return error;
@@ -54,7 +59,9 @@ export const updateSkillsService = async (resumeId, data) => {
 // Professional Info Service
 export const getProfessionalInfoService = async (resumeId) => {
   try {
-    const response = await axiosInstance.get(`/api/resume/${resumeId}/professional-info`);
+    const response = await axiosInstance.get(
+      `/api/resume/${resumeId}/professional-info`
+    );
     return response;
   } catch (error) {
     return error;
@@ -63,7 +70,10 @@ export const getProfessionalInfoService = async (resumeId) => {
 
 export const postProfessionalInfoService = async (resumeId, data) => {
   try {
-    const response = await axiosInstance.post(`/api/resume/${resumeId}/professional-info`, data);
+    const response = await axiosInstance.post(
+      `/api/resume/${resumeId}/professional-info`,
+      data
+    );
     return response;
   } catch (error) {
     return error;
@@ -72,7 +82,10 @@ export const postProfessionalInfoService = async (resumeId, data) => {
 
 export const updateProfessionalInfoService = async (resumeId, data) => {
   try {
-    const response = await axiosInstance.put(`/api/resume/${resumeId}/professional-info`, data);
+    const response = await axiosInstance.put(
+      `/api/resume/${resumeId}/professional-info`,
+      data
+    );
     return response;
   } catch (error) {
     return error;
@@ -82,7 +95,9 @@ export const updateProfessionalInfoService = async (resumeId, data) => {
 // Social Media Service
 export const getSocialMediaService = async (resumeId) => {
   try {
-    const response = await axiosInstance.get(`/api/resume/${resumeId}/social-media`);
+    const response = await axiosInstance.get(
+      `/api/resume/${resumeId}/social-media`
+    );
     return response;
   } catch (error) {
     return error;
@@ -91,7 +106,10 @@ export const getSocialMediaService = async (resumeId) => {
 
 export const postSocialMediaService = async (resumeId, data) => {
   try {
-    const response = await axiosInstance.post(`/api/resume/${resumeId}/social-media`, data);
+    const response = await axiosInstance.post(
+      `/api/resume/${resumeId}/social-media`,
+      data
+    );
     return response;
   } catch (error) {
     return error;
@@ -100,7 +118,10 @@ export const postSocialMediaService = async (resumeId, data) => {
 
 export const updateSocialMediaService = async (resumeId, data) => {
   try {
-    const response = await axiosInstance.put(`/api/resume/${resumeId}/social-media`, data);
+    const response = await axiosInstance.put(
+      `/api/resume/${resumeId}/social-media`,
+      data
+    );
     return response;
   } catch (error) {
     return error;
@@ -110,7 +131,9 @@ export const updateSocialMediaService = async (resumeId, data) => {
 // Experience Service
 export const getExperienceService = async (resumeId) => {
   try {
-    const response = await axiosInstance.get(`/api/resume/${resumeId}/experience`);
+    const response = await axiosInstance.get(
+      `/api/resume/${resumeId}/experience`
+    );
     return response;
   } catch (error) {
     return error;
@@ -119,7 +142,10 @@ export const getExperienceService = async (resumeId) => {
 
 export const addExperienceService = async (resumeId, data) => {
   try {
-    const response = await axiosInstance.post(`/api/resume/${resumeId}/experience`, data);
+    const response = await axiosInstance.post(
+      `/api/resume/${resumeId}/experience`,
+      data
+    );
     return response;
   } catch (error) {
     return error;
@@ -128,7 +154,21 @@ export const addExperienceService = async (resumeId, data) => {
 
 export const updateExperienceService = async (resumeId, experienceId, data) => {
   try {
-    const response = await axiosInstance.put(`/api/resume/${resumeId}/experience/${experienceId}`, data);
+    const response = await axiosInstance.put(
+      `/api/resume/${resumeId}/experience/${experienceId}`,
+      data
+    );
+    return response;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const deleteExperienceService = async (resumeId, experienceId) => {
+  try {
+    const response = await axiosInstance.delete(
+      `/api/resume/${resumeId}/experience/${experienceId}`
+    );
     return response;
   } catch (error) {
     return error;
@@ -138,7 +178,9 @@ export const updateExperienceService = async (resumeId, experienceId, data) => {
 // Education Service
 export const getEducationService = async (resumeId) => {
   try {
-    const response = await axiosInstance.get(`/api/resume/${resumeId}/education`);
+    const response = await axiosInstance.get(
+      `/api/resume/${resumeId}/education`
+    );
     return response;
   } catch (error) {
     return error;
@@ -147,7 +189,10 @@ export const getEducationService = async (resumeId) => {
 
 export const addEducationService = async (resumeId, data) => {
   try {
-    const response = await axiosInstance.post(`/api/resume/${resumeId}/education`, data);
+    const response = await axiosInstance.post(
+      `/api/resume/${resumeId}/education`,
+      data
+    );
     return response;
   } catch (error) {
     return error;
@@ -156,7 +201,21 @@ export const addEducationService = async (resumeId, data) => {
 
 export const updateEducationService = async (resumeId, educationId, data) => {
   try {
-    const response = await axiosInstance.put(`/api/resume/${resumeId}/education/${educationId}`, data);
+    const response = await axiosInstance.put(
+      `/api/resume/${resumeId}/education/${educationId}`,
+      data
+    );
+    return response;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const deleteEducationService = async (resumeId, educationId) => {
+  try {
+    const response = await axiosInstance.delete(
+      `/api/resume/${resumeId}/education/${educationId}`
+    );
     return response;
   } catch (error) {
     return error;
@@ -166,7 +225,9 @@ export const updateEducationService = async (resumeId, educationId, data) => {
 // Projects Service
 export const getProjectsService = async (resumeId) => {
   try {
-    const response = await axiosInstance.get(`/api/resume/${resumeId}/projects`);
+    const response = await axiosInstance.get(
+      `/api/resume/${resumeId}/projects`
+    );
     return response;
   } catch (error) {
     return error;
@@ -175,7 +236,10 @@ export const getProjectsService = async (resumeId) => {
 
 export const addProjectsService = async (resumeId, data) => {
   try {
-    const response = await axiosInstance.post(`/api/resume/${resumeId}/projects`, data);
+    const response = await axiosInstance.post(
+      `/api/resume/${resumeId}/projects`,
+      data
+    );
     return response;
   } catch (error) {
     return error;
@@ -184,7 +248,21 @@ export const addProjectsService = async (resumeId, data) => {
 
 export const updateProjectsService = async (resumeId, projectId, data) => {
   try {
-    const response = await axiosInstance.put(`/api/resume/${resumeId}/projects/${projectId}`, data);
+    const response = await axiosInstance.put(
+      `/api/resume/${resumeId}/projects/${projectId}`,
+      data
+    );
+    return response;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const deleteProjectsService = async (resumeId, projectId) => {
+  try {
+    const response = await axiosInstance.delete(
+      `/api/resume/${resumeId}/projects/${projectId}`
+    );
     return response;
   } catch (error) {
     return error;
@@ -194,7 +272,9 @@ export const updateProjectsService = async (resumeId, projectId, data) => {
 // Certifications Service
 export const getCertificationsService = async (resumeId) => {
   try {
-    const response = await axiosInstance.get(`/api/resume/${resumeId}/certifications`);
+    const response = await axiosInstance.get(
+      `/api/resume/${resumeId}/certifications`
+    );
     return response;
   } catch (error) {
     return error;
@@ -203,16 +283,39 @@ export const getCertificationsService = async (resumeId) => {
 
 export const addCertificationsService = async (resumeId, data) => {
   try {
-    const response = await axiosInstance.post(`/api/resume/${resumeId}/certifications`, data);
+    const response = await axiosInstance.post(
+      `/api/resume/${resumeId}/certifications`,
+      data
+    );
     return response;
   } catch (error) {
     return error;
   }
 };
 
-export const updateCertificationsService = async (resumeId, certificationId, data) => {
+export const updateCertificationsService = async (
+  resumeId,
+  certificationId,
+  data
+) => {
   try {
-    const response = await axiosInstance.put(`/api/resume/${resumeId}/certifications/${certificationId}`, data);
+    const response = await axiosInstance.put(
+      `/api/resume/${resumeId}/certifications/${certificationId}`,
+      data
+    );
+    return response;
+  } catch (error) {
+    return error;
+  }
+};
+export const deleteCertificationsService = async (
+  resumeId,
+  certificationId
+) => {
+  try {
+    const response = await axiosInstance.delete(
+      `/api/resume/${resumeId}/certifications/${certificationId}`
+    );
     return response;
   } catch (error) {
     return error;
@@ -222,7 +325,9 @@ export const updateCertificationsService = async (resumeId, certificationId, dat
 // Languages Service
 export const getLanguagesService = async (resumeId) => {
   try {
-    const response = await axiosInstance.get(`/api/resume/${resumeId}/languages`);
+    const response = await axiosInstance.get(
+      `/api/resume/${resumeId}/languages`
+    );
     return response.data;
   } catch (error) {
     return error;
@@ -231,7 +336,10 @@ export const getLanguagesService = async (resumeId) => {
 
 export const addLanguagesService = async (resumeId, data) => {
   try {
-    const response = await axiosInstance.post(`/api/resume/${resumeId}/languages`, data);
+    const response = await axiosInstance.post(
+      `/api/resume/${resumeId}/languages`,
+      data
+    );
     return response.data;
   } catch (error) {
     return error;
@@ -240,7 +348,10 @@ export const addLanguagesService = async (resumeId, data) => {
 
 export const updateLanguagesService = async (resumeId, languageId, data) => {
   try {
-    const response = await axiosInstance.put(`/api/resume/${resumeId}/languages/${languageId}`, data);
+    const response = await axiosInstance.put(
+      `/api/resume/${resumeId}/languages/${languageId}`,
+      data
+    );
     return response.data;
   } catch (error) {
     return error;
@@ -250,7 +361,9 @@ export const updateLanguagesService = async (resumeId, languageId, data) => {
 // References Service
 export const getReferencesService = async (resumeId) => {
   try {
-    const response = await axiosInstance.get(`/api/resume/${resumeId}/references`);
+    const response = await axiosInstance.get(
+      `/api/resume/${resumeId}/references`
+    );
     return response;
   } catch (error) {
     return error;
@@ -259,7 +372,10 @@ export const getReferencesService = async (resumeId) => {
 
 export const addReferencesService = async (resumeId, data) => {
   try {
-    const response = await axiosInstance.post(`/api/resume/${resumeId}/references`, data);
+    const response = await axiosInstance.post(
+      `/api/resume/${resumeId}/references`,
+      data
+    );
     return response;
   } catch (error) {
     return error;
@@ -268,7 +384,21 @@ export const addReferencesService = async (resumeId, data) => {
 
 export const updateReferencesService = async (resumeId, referenceId, data) => {
   try {
-    const response = await axiosInstance.put(`/api/resume/${resumeId}/references/${referenceId}`, data);
+    const response = await axiosInstance.put(
+      `/api/resume/${resumeId}/references/${referenceId}`,
+      data
+    );
+    return response;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const deleteReferencesService = async (resumeId, referenceId) => {
+  try {
+    const response = await axiosInstance.delete(
+      `/api/resume/${resumeId}/references/${referenceId}`
+    );
     return response;
   } catch (error) {
     return error;
@@ -278,7 +408,9 @@ export const updateReferencesService = async (resumeId, referenceId, data) => {
 // Extra Info Service
 export const getExtraInfoService = async (resumeId) => {
   try {
-    const response = await axiosInstance.get(`/api/resume/${resumeId}/extra-info`);
+    const response = await axiosInstance.get(
+      `/api/resume/${resumeId}/extra-info`
+    );
     return response.data;
   } catch (error) {
     return error;
@@ -287,7 +419,10 @@ export const getExtraInfoService = async (resumeId) => {
 
 export const addExtraInfoService = async (resumeId, data) => {
   try {
-    const response = await axiosInstance.post(`/api/resume/${resumeId}/extra-info`, data);
+    const response = await axiosInstance.post(
+      `/api/resume/${resumeId}/extra-info`,
+      data
+    );
     return response.data;
   } catch (error) {
     return error;
@@ -296,7 +431,10 @@ export const addExtraInfoService = async (resumeId, data) => {
 
 export const updateExtraInfoService = async (resumeId, extraInfoId, data) => {
   try {
-    const response = await axiosInstance.put(`/api/resume/${resumeId}/extra-info/${extraInfoId}`, data);
+    const response = await axiosInstance.put(
+      `/api/resume/${resumeId}/extra-info/${extraInfoId}`,
+      data
+    );
     return response.data;
   } catch (error) {
     return error;

@@ -5,7 +5,7 @@ import { useTheme } from '@mui/material/styles'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 
 // Component Imports
-import { Menu, MenuItem } from '@menu/vertical-menu'
+import { Menu, MenuItem  , SubMenu} from '@menu/vertical-menu'
 
 // Hook Imports
 import useVerticalNav from '@menu/hooks/useVerticalNav'
@@ -16,6 +16,7 @@ import StyledVerticalNavExpandIcon from '@menu/styles/vertical/StyledVerticalNav
 // Style Imports
 import menuItemStyles from '@core/styles/vertical/menuItemStyles'
 import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
+import { Chip } from '@mui/material'
 
 const RenderExpandIcon = ({ open, transitionDuration }) => (
   <StyledVerticalNavExpandIcon open={open} transitionDuration={transitionDuration}>
@@ -58,6 +59,15 @@ const VerticalMenu = ({ scrollMenu }) => {
         <MenuItem href='/home' icon={<i className='ri-home-smile-line' />}>
           Home
         </MenuItem>
+        <SubMenu
+          label={"Resumes"}
+          icon={<i className='ri-home-smile-line' />}
+          // suffix={<Chip label='5' size='small' color='error' />}
+        >
+          <MenuItem href={`/resumes/create-resume`}>{"Create"}</MenuItem>
+          <MenuItem href={`/resumes`}>{"Templates"}</MenuItem>
+        </SubMenu>
+
         <MenuItem href='/about' icon={<i className='ri-information-line' />}>
           About
         </MenuItem>
