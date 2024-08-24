@@ -20,13 +20,24 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default=datetime.utcnow())
     resumes: List["Resume"] = Relationship(back_populates="user")
     cover_letters: List["CoverLetter"] = Relationship(back_populates="user")
+    job_applications: List["JobApplication"] = Relationship(back_populates="user")
+
+class ResumeType(Enum):
+    generic = "generic"
+    job = "job"
 
 class Resume(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
+    title: Optional[str] = Field(default=None)
     skill_set: Optional[List[str]] = Field(sa_type=JSON, default=None)
     created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
     user: Optional[User] = Relationship(back_populates="resumes")
+    type: ResumeType = Field(default=ResumeType.generic, sa_type=SAEnum(ResumeType))
+    resume_template: Optional[str] = Field(default=None)
+    template_color: Optional[str] = Field(default=None)
+    ats_score: Optional[float] = Field(default=None)
+    access: Optional[str] = Field(default='private')
     steps: Optional["ResumeSteps"] = Relationship(back_populates="resume", sa_relationship_kwargs={"uselist": False})
     professional_info: Optional["ProfessionalInfo"] = Relationship(back_populates="resume", sa_relationship_kwargs={"uselist": False})
     social_media: Optional["SocialMedia"] = Relationship(back_populates="resume", sa_relationship_kwargs={"uselist": False})
@@ -38,6 +49,7 @@ class Resume(SQLModel, table=True):
     languages: List[Optional["Languages"]] = Relationship(back_populates="resume")
     references: List[Optional["References"]] = Relationship(back_populates="resume")
     extra_info: List[Optional["ExtraInfo"]] = Relationship(back_populates="resume")
+    job_applications: List["JobApplication"] = Relationship(back_populates="resume")
 
 class ResumeSteps(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -135,8 +147,7 @@ class References(SQLModel, table=True):
 
 class ExtraInfo(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    key: str | None = None
-    value: str | None = None
+    extra: List[dict[str, str]] = Field(sa_type=JSON, default=[])
     resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
     resume: Optional[Resume] = Relationship(back_populates="extra_info")
 
@@ -144,6 +155,27 @@ class CoverLetter(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     title: str | None = None
     content: str
+    cover_letter_template: Optional[str] = Field(default=None)
     created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
     user_id: int = Field(foreign_key="user.id")
     user: Optional[User] = Relationship(back_populates="cover_letters")
+
+class JobApplicationStatus(Enum):
+    in_progress = "in_progress"
+    interview = "interview"
+    applied = "applied"
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
+
+class JobApplication(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
+    resume: Optional[Resume] = Relationship(back_populates="job_applications")
+    cover_letter_id: Optional[int] = Field(default=None, foreign_key="coverletter.id")
+    job_description: str | None = None
+    created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
+    status: JobApplicationStatus = Field(default=JobApplicationStatus.in_progress)
+    user_id: int = Field(foreign_key="user.id")
+    user: Optional[User] = Relationship(back_populates="job_applications")
+
