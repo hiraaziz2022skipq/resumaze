@@ -20,7 +20,7 @@ const steps = [
   // 'Extra Info',
 ];
 
-export default function HorizontalLinearAlternativeLabelStepper({currentStep , setCurrentStep}) {
+export default function HorizontalLinearAlternativeLabelStepper({currentStep , steps , setCurrentStep  }) {
   return (
     <Box sx={{ width: '100%' }}>
       <Stepper activeStep={currentStep} alternativeLabel>

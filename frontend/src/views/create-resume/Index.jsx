@@ -496,7 +496,8 @@ const CreateResume = () => {
               >
                 Back
               </Button>
-              <Button variant="contained" onClick={handleNext}>
+              <Button  variant="outlined"
+                color="secondary" onClick={handleNext}>
                 {currentStep !== currentContent.length - 1  ? "Next" :  "Finish"}
               </Button>
             </Grid>
