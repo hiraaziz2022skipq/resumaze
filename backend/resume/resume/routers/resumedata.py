@@ -108,6 +108,15 @@ def hash_password(password: str) -> str:
 def all_mandatory_fields_filled(data: dict, mandatory_fields: list) -> bool:
     return all(data.get(field) for field in mandatory_fields)
 
+# Add api to create resume , in which it is recieving userid and resume type in body
+@router.post("/create-resume", status_code=status.HTTP_201_CREATED)
+def create_resume(resume_input: Resume, session: db_dependency):
+    new_resume = Resume(**resume_input.model_dump())
+    session.add(new_resume)
+    session.commit()
+    session.refresh(new_resume)
+    return new_resume
+
 # Add this API to create a user with an empty resume
 @router.post("/create-user", status_code=status.HTTP_201_CREATED)
 def create_user(user_input: UserInput, session: db_dependency):
@@ -116,33 +125,18 @@ def create_user(user_input: UserInput, session: db_dependency):
     if existing_user:
         raise HTTPException(status_code=400, detail="User with this email already exists")
 
-    # Create an empty resume
-    new_resume = Resume()
-    session.add(new_resume)
-    session.flush()  # This assigns an id to new_resume
-
     # Create the user
     new_user = User(
         name=user_input.name,
         email=user_input.email,
         hashed_password=hash_password(user_input.password),
-        resumes=new_resume.id
     )
     session.add(new_user)
 
     session.commit()
     session.refresh(new_user)
-    session.refresh(new_resume)
 
-    return JSONResponse(content=jsonable_encoder({
-        "user": {
-            "id": new_user.id,
-            "name": new_user.name,
-            "email": new_user.email,
-            "resumes": new_user.resumes
-        },
-        "resume": new_resume,
-    }))
+    return new_user
 # API routes
 @router.get("/{resume_id}/steps")
 def get_steps(resume_id: int, session: db_dependency):
