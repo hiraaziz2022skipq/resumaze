@@ -4,11 +4,10 @@ from contextlib import asynccontextmanager
 from typing import Annotated
 from sqlmodel import Session
 from resume.db import create_db_and_tables
-from resume.routers import auth, resumedata
+from resume.routers import auth, resumedata, jobapplication
 from resume.db import engine
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
-from resume.routers import resumeai
 import json
 
 @asynccontextmanager
@@ -20,7 +19,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(auth.router)
 app.include_router(resumedata.router)
-app.include_router(resumeai.router)
+app.include_router(jobapplication.router)
 origins = [
     "http://localhost:3000",
     "https://localhost:3000",
