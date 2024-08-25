@@ -440,3 +440,14 @@ export const updateExtraInfoService = async (resumeId, extraInfoId, data) => {
     return error;
   }
 };
+
+export const deleteExtraInfoService = async (resumeId, referenceId) => {
+  try {
+    const response = await axiosInstance.delete(
+      `/api/resume/${resumeId}/extra-info/${referenceId}`
+    );
+    return response;
+  } catch (error) {
+    return error;
+  }
+};

@@ -16,11 +16,16 @@ import Education from "../education";
 import Project from "../project";
 import Certificates from "../certifications";
 import Skills from "../skills/Index";
+import Languages from "../languages";
+import PersonalSummary from "../personal-summary/Index";
+import SocialMedia from "../social-media";
+import References from "../reference";
+import ExtraInfo from "../extra-info";
 
 const CreateResumeForms = () => {
   const [currentStep, setCurrentStep] = useState(0);
 
-  const resumeId = 8;
+  const resumeId =20;
 
   const currentContent = [
     <PersonalDetail resumeId={resumeId} />,
@@ -29,6 +34,11 @@ const CreateResumeForms = () => {
     <Project resumeId={resumeId} />,
     <Certificates resumeId={resumeId}/>,
     <Skills resumeId={resumeId}/>,
+    <Languages resumeId={resumeId}/>,
+    <PersonalSummary resumeId={resumeId}/>,
+    <SocialMedia resumeId={resumeId}/>,
+    <References  resumeId={resumeId}/>,
+    <ExtraInfo resumeId={resumeId} />
   ];
 
   const handleNext = () => {
