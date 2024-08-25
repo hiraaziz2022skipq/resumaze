@@ -38,12 +38,12 @@ class Resume(SQLModel, table=True):
     template_color: Optional[str] = Field(default=None)
     ats_score: Optional[float] = Field(default=None)
     access: Optional[str] = Field(default='private')
+
     steps: Optional["ResumeSteps"] = Relationship(back_populates="resume", sa_relationship_kwargs={"uselist": False})
     professional_info: Optional["ProfessionalInfo"] = Relationship(back_populates="resume", sa_relationship_kwargs={"uselist": False})
     social_media: Optional["SocialMedia"] = Relationship(back_populates="resume", sa_relationship_kwargs={"uselist": False})
-    
     experience: List[Optional["Experience"]] = Relationship(back_populates="resume")
-    education: List[Optional["Education"]] = Relationship(back_populates="resume")
+    education: List["Education"] = Relationship(back_populates="resume")
     projects: List[Optional["Projects"]] = Relationship(back_populates="resume")
     certifications: List[Optional["Certifications"]] = Relationship(back_populates="resume")
     languages: List[Optional["Languages"]] = Relationship(back_populates="resume")
@@ -104,7 +104,7 @@ class Education(SQLModel, table=True):
     location: Optional[str] = None
     is_current: Optional[bool] = None
     resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
-    resume: Resume = Relationship(back_populates="education")
+    resume: Optional[Resume] = Relationship(back_populates="education")
 
 class Projects(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -159,6 +159,7 @@ class CoverLetter(SQLModel, table=True):
     created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
     user_id: int = Field(foreign_key="user.id")
     user: Optional[User] = Relationship(back_populates="cover_letters")
+    job_applications: List["JobApplication"] = Relationship(back_populates="cover_letter")
 
 class JobApplicationStatus(Enum):
     in_progress = "in_progress"
@@ -173,7 +174,8 @@ class JobApplication(SQLModel, table=True):
     resume_id: Optional[int] = Field(default=None, foreign_key="resume.id")
     resume: Optional[Resume] = Relationship(back_populates="job_applications")
     cover_letter_id: Optional[int] = Field(default=None, foreign_key="coverletter.id")
-    job_description: str | None = None
+    cover_letter: Optional[CoverLetter] = Relationship(back_populates="job_applications")
+    job_description: Optional[str] = None
     created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
     status: JobApplicationStatus = Field(default=JobApplicationStatus.in_progress)
     user_id: int = Field(foreign_key="user.id")
