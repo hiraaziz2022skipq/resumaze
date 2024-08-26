@@ -438,7 +438,7 @@ const CreateResume = () => {
             </CardContent>
             <Divider variant='middle' />
             {currentContent[currentStep]}
-            <Grid container spacing={2} sx={{ p: 2, justifyContent: 'flex-end' }}>
+            {/* <Grid container spacing={2} sx={{ p: 2, justifyContent: 'flex-end' }}>
               <Button variant='outlined' color='secondary' sx={{ mr: 1 }} onClick={handlePrev}>
                 Back
               </Button>
@@ -448,7 +448,7 @@ const CreateResume = () => {
               <Button variant='contained' onClick={handleNext}>
                 {currentStep !== currentContent.length - 1 ? 'Next' : 'Finish'}
               </Button>
-            </Grid>
+            </Grid> */}
           </Card>
         </Grid>
 

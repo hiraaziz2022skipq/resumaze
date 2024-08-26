@@ -1,9 +1,9 @@
 // app/store.js
 import { configureStore } from '@reduxjs/toolkit';
-import exampleSlice from "./testing/slice"
+import kanbanReducer from '@/redux/slices/kanban'
 
 export const store = configureStore({
   reducer: {
-    exampleSlice:exampleSlice
+    kanbanReducer,
   },
 });

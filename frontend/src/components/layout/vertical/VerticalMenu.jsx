@@ -68,6 +68,10 @@ const VerticalMenu = ({ scrollMenu }) => {
           <MenuItem href={`/resumes`}>{"Templates"}</MenuItem>
         </SubMenu>
 
+        <MenuItem href='/job-tracker' icon={<i className='ri-information-line' />}>
+          Job Tracker
+        </MenuItem>
+
         <MenuItem href='/about' icon={<i className='ri-information-line' />}>
           About
         </MenuItem>

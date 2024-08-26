@@ -17,7 +17,7 @@ const Template1 = ({ resumeData = resumeFakeData }) => {
   return (
     <Box
       sx={{
-        maxWidth: { md: "95%" },
+        maxWidth: { md: "100%" },
         position: "sticky",
         ml:"5px",
         overflowY: { md: "scroll" },
