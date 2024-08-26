@@ -79,9 +79,8 @@ class ReferenceInput(BaseModel):
     phone: Optional[str] = None
     relationship: Optional[str] = None
 
-class ExtraInfoInput(BaseModel):
-    key: Optional[str] = None
-    value: Optional[str] = None
+class ExtraInfoInput(SQLModel):
+    extra: List[dict[str,str]] 
 
 class UserInput(BaseModel):
     name: str
@@ -108,14 +107,6 @@ def hash_password(password: str) -> str:
 def all_mandatory_fields_filled(data: dict, mandatory_fields: list) -> bool:
     return all(data.get(field) for field in mandatory_fields)
 
-# Add api to create resume , in which it is recieving userid and resume type in body
-@router.post("/create-resume", status_code=status.HTTP_201_CREATED)
-def create_resume(resume_input: Resume, session: db_dependency):
-    new_resume = Resume(**resume_input.model_dump())
-    session.add(new_resume)
-    session.commit()
-    session.refresh(new_resume)
-    return new_resume
 
 # Add this API to create a user with an empty resume
 @router.post("/create-user", status_code=status.HTTP_201_CREATED)
@@ -137,6 +128,44 @@ def create_user(user_input: UserInput, session: db_dependency):
     session.refresh(new_user)
 
     return new_user
+
+# Add api to create resume , in which it is recieving userid and resume type in body
+@router.post("/create-resume", status_code=status.HTTP_201_CREATED)
+def create_resume(resume_input: Resume, session: db_dependency):
+    new_resume = Resume(**resume_input.model_dump())
+    session.add(new_resume)
+    session.commit()
+    session.refresh(new_resume)
+    return new_resume
+
+class ResumeRead(SQLModel):
+    id: int
+    user_id: int
+    title: Optional[str]
+    type: str
+    resume_template: Optional[str]
+    template_color:Optional [str]
+    ats_score: Optional[float]
+    access: Optional[str]
+    skill_set: Optional[List[str]]
+    professional_info: Optional[ProfessionalInfo]
+    education: Optional[List[Education]]
+    experience: Optional[List[Experience]]
+    projects: Optional[List[Projects]]
+    certifications: Optional[List[Certifications]]
+    languages: Optional[List[Languages]]
+    references: Optional[List[References]]
+    extra_info: Optional[List[ExtraInfo]]
+    class Config:
+        from_attributes = True
+
+#Get all resumes of a user
+@router.get("/{user_id}/resumes",response_model=List[ResumeRead])
+def get_resumes(user_id: int, session: db_dependency):
+
+    resumes = session.exec(select(Resume).where(Resume.user_id == user_id)).scalars().all()
+    return resumes
+
 # API routes
 @router.get("/{resume_id}/steps")
 def get_steps(resume_id: int, session: db_dependency):
@@ -230,7 +259,6 @@ def update_professional_info(resume_id: int, info: ProfessionalInfoInput, sessio
         "professional_info": resume.professional_info.model_dump(),
         "steps": steps
     }))
-
 
 #social media route
 @router.get("/{resume_id}/social-media")
@@ -609,14 +637,14 @@ def add_languages(resume_id: int, languages: LanguageInput, session: db_dependen
     steps = get_resume_steps(resume_id, session)
     return JSONResponse(content=jsonable_encoder({"languages": new_languages.model_dump(), "steps": steps}))
 
-@router.put("/{resume_id}/languages/{languages_id}", response_model=Languages)
-def update_languages(resume_id: int, languages_id: int, languages: Languages, session: db_dependency):
-    db_languages = session.get(Languages, languages_id)
-    if not db_languages or db_languages.resume_id != resume_id:
+@router.put("/{resume_id}/languages", response_model=Languages)
+def update_languages(resume_id: int,languages: Languages, session: db_dependency):
+    #get languages from resume_id
+    db_languages = session.exec(select(Languages).where(Languages.resume_id == resume_id)).scalars().first()
+    if not db_languages :
         raise HTTPException(status_code=404, detail="Languages not found")
     
-    for field, value in languages.model_dump(exclude_unset=True).items():
-        setattr(db_languages, field, value)
+    db_languages.language = languages.language
 
     is_complete = bool(languages.language)
     update_resume_steps(resume_id, "languages", session, is_complete)
@@ -693,18 +721,8 @@ def get_extra_info(resume_id: int, session: db_dependency):
     resume = session.get(Resume, resume_id)
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
-    results = session.exec(select(ExtraInfo).where(ExtraInfo.resume_id == resume_id)).all()
-    extra_info = [result[0] for result in results]
-    extra_info_schema = [
-        ExtraInfo(
-            id=info.id,
-            key=info.key,
-            value=info.value,
-            resume_id=info.resume_id
-        )
-        for info in extra_info
-    ]
-    return extra_info_schema
+    results = session.exec(select(ExtraInfo).where(ExtraInfo.resume_id == resume_id)).scalars().all()
+    return results
 
 @router.post("/{resume_id}/extra-info", response_model=ExtraInfo)
 def add_extra_info(resume_id: int, extra_info: ExtraInfoInput, session: db_dependency):
@@ -732,6 +750,18 @@ def update_extra_info(resume_id: int, extra_info_id: int, extra_info: ExtraInfoI
     session.refresh(db_extra_info)
     steps = get_resume_steps(resume_id, session)
     return JSONResponse(content=jsonable_encoder({"extra_info": db_extra_info.model_dump(), "steps": steps}))
+
+@router.delete("/{resume_id}/extra-info/{extra_info_id}", status_code=204)
+def delete_extra_info(resume_id: int, extra_info_id: int, session: db_dependency):
+    #get extra info from resume_id
+    db_extra_info = session.exec(select(ExtraInfo).where(ExtraInfo.id == extra_info_id)).scalars().first()
+    if not db_extra_info :
+        raise HTTPException(status_code=404, detail="ExtraInfo not found")
+    
+    session.delete(db_extra_info)
+    session.commit()
+    steps = get_resume_steps(resume_id, session)
+    return JSONResponse(content=jsonable_encoder({"message": "ExtraInfo deleted successfully", "steps": steps}))
 
 # Cover letter route
 class CoverLetterInput(BaseModel):

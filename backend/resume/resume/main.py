@@ -17,9 +17,10 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
+app.include_router(jobapplication.router)
 app.include_router(auth.router)
 app.include_router(resumedata.router)
-app.include_router(jobapplication.router)
+
 origins = [
     "http://localhost:3000",
     "https://localhost:3000",
