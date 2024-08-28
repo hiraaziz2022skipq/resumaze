@@ -12,7 +12,7 @@ import { animations } from '@formkit/drag-and-drop'
 import classnames from 'classnames'
 
 // Slice Imports
-import { addTask, editColumn, deleteColumn, updateColumnTaskIds } from '@/redux/slices/kanban'
+import { addTask, editColumn, deleteColumn } from '@/redux/slices/kanban'
 
 // Component Imports
 import OptionMenu from '@core/components/option-menu'
@@ -20,37 +20,25 @@ import OptionMenu from '@core/components/option-menu'
 // Styles Imports
 import styles from '../styles.module.css'
 import TrackerCard from '../ui/TrackerCard'
+import { updateColumnTaskIds } from '@/redux/job-tracker/slice'
 
 const KanbanList = props => {
   // Props
-  const { column, tasks, dispatch, store, setDrawerOpen, columns, setColumns, currentTask } = props
+  const { column, jobs, dispatch, setDrawerOpen, columns, setColumns  , handleJobClick } = props
 
+
+  console.log(jobs,"=jobs==")
   // States
   const [editDisplay, setEditDisplay] = useState(false)
   const [title, setTitle] = useState(column.title)
 
   // Hooks
-  const [tasksListRef, tasksList, setTasksList] = useDragAndDrop(tasks, {
-    group: 'tasksList',
+  const [jobListsRef, jobsList, setJobsList] = useDragAndDrop(jobs, {
+    group: 'jobsList',
     plugins: [animations()],
     draggable: el => el.classList.contains('item-draggable')
   })
 
-  // Add New Task
-  const addNewTask = title => {
-    dispatch(addTask({ columnId: column.id, title: title }))
-    setTasksList([...tasksList, { id: store.tasks[store.tasks.length - 1].id + 1, title }])
-
-    const newColumns = columns.map(col => {
-      if (col.id === column.id) {
-        return { ...col, taskIds: [...col.taskIds, store.tasks[store.tasks.length - 1].id + 1] }
-      }
-
-      return col
-    })
-
-    setColumns(newColumns)
-  }
 
   // Handle Submit Edit
   const handleSubmitEdit = e => {
@@ -81,45 +69,16 @@ const KanbanList = props => {
     setColumns(columns.filter(col => col.id !== column.id))
   }
 
-  // Update column taskIds on drag and drop
-  useEffect(() => {
-    if (tasksList !== tasks) {
-      dispatch(updateColumnTaskIds({ id: column.id, tasksList }))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasksList])
 
-  // To update the tasksList when a task is edited
-  useEffect(() => {
-    const newTasks = tasksList.map(task => {
-      if (task?.id === currentTask?.id) {
-        return currentTask
-      }
+  useEffect(()=>{
+    setJobsList(jobs)
+  },[jobs])
 
-      return task
-    })
 
-    if (currentTask !== tasksList.find(task => task?.id === currentTask?.id)) {
-      setTasksList(newTasks)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTask])
 
-  // To update the tasksList when columns are updated
-  useEffect(() => {
-    let taskIds = []
-
-    columns.map(col => {
-      taskIds = [...taskIds, ...col.taskIds]
-    })
-    const newTasksList = tasksList.filter(task => task && taskIds.includes(task.id))
-
-    setTasksList(newTasksList)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [columns])
-
+  console.log(jobsList,"===jobList===")
   return (
-    <div ref={tasksListRef} className='flex flex-col is-[16.5rem]'>
+    <div ref={jobListsRef} className='flex flex-col is-[16.5rem]'>
       {editDisplay ? (
         <form
           className='flex items-center mbe-4'
@@ -172,19 +131,20 @@ const KanbanList = props => {
           </div>
         </div>
       )}
-      {tasksList.map(
-        task =>
-          task && (
+      {jobsList.map(
+        job =>
+          job && (
             <TrackerCard
-              key={task.id}
-              task={task}
+              key={job.id}
+              task={job}
               dispatch={dispatch}
               column={column}
               setColumns={setColumns}
               columns={columns}
               setDrawerOpen={setDrawerOpen}
-              tasksList={tasksList}
-              setTasksList={setTasksList}
+              tasksList={jobsList}
+              setTasksList={setJobsList}
+              handleJobClick={handleJobClick}
             />
           )
       )}

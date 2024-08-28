@@ -7,53 +7,25 @@ import {
   IconButton,
   TextField,
   Typography,
-  CardMedia,
   Button,
+  CircularProgress,
 } from "@mui/material";
 import { useEditor, EditorContent } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { Underline } from "@tiptap/extension-underline";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { TextAlign } from "@tiptap/extension-text-align";
-import Carousel from "react-carousel-mui";
-import React from "react";
-import theme from "@/@core/theme";
-import ResumeChooseCard from "../ui/resumeChooseCard";
+import React, { useState } from "react";
+import { createJobApplication } from "@/redux/job-tracker/action";
 
-const tabAvatars = [
-  {
-    imgWidth: 200,
-    imgHeight: 270,
-    category: "resumetemp1",
-  },
-  {
-    imgWidth: 200,
-    imgHeight: 270,
-    category: "resumetemp1",
-  },
-  {
-    imgWidth: 200,
-    imgHeight: 270,
-    category: "resumetemp1",
-  },
-  {
-    imgWidth: 200,
-    imgHeight: 270,
-    category: "resumetemp1",
-  },
-  {
-    imgWidth: 200,
-    imgHeight: 270,
-    category: "resumetemp1",
-  },
-  {
-    imgWidth: 200,
-    imgHeight: 270,
-    category: "resumetemp1",
-  },
-];
+import toast, { Toaster } from "react-hot-toast";
+import { useDispatch } from "react-redux";
 
 const ApplyingJob = ({ handleReset }) => {
+  const [title, setTitle] = useState("");
+  const [isSubmiting, setIsSubmiting] = useState(false);
+
+  const dispatch = useDispatch();
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -65,15 +37,36 @@ const ApplyingJob = ({ handleReset }) => {
       }),
       Underline,
     ],
-    content: `
-             
-            `,
+    content: "",
   });
 
-  const srcList = "https://cdn.pixabay.com/photo/2022/01/25/04/42/bird-6965228_1280.jpg "
-    .repeat(10)
-    .split(" ")
-    .slice(0, 10);
+  const handleSubmit = async (e) => {
+    setIsSubmiting(true);
+    e.preventDefault();
+
+    const payload = {
+      title,
+      job_description: editor.getHTML(),
+      user_id: 15,
+    };
+
+    console.log(payload, "==payload===");
+    try {
+      const response = await dispatch(createJobApplication(payload));
+
+      console.log(response, "===response==");
+      if (response) {
+        setIsSubmiting(false);
+        handleReset();
+      } else {
+        setIsSubmiting(false); 
+      }
+
+      
+    } catch (error) {
+      toast.error("An error occurred. Please try again.");
+    }
+  };
 
   return (
     <>
@@ -85,15 +78,15 @@ const ApplyingJob = ({ handleReset }) => {
       </div>
       <Divider />
       <div className="p-5">
-        <form onSubmit={() => {}} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <Grid container spacing={5}>
             <Grid item xs={12} sm={12}>
               <TextField
                 fullWidth
                 label="Title"
-                value={""}
+                value={title}
                 placeholder="Full Stack Developer"
-                onChange={(e) => {}}
+                onChange={(e) => setTitle(e.target.value)}
               />
             </Grid>
             <Grid item xs={12} sm={12}>
@@ -105,14 +98,29 @@ const ApplyingJob = ({ handleReset }) => {
             </Grid>
             <Grid item xs={12}>
               <div style={{ textAlign: "right" }}>
-                <Button variant="contained" onClick={() => {}}>
-                  Generate
+                <Button
+                  disabled={isSubmiting}
+                  variant="contained"
+                  type="submit"
+                >
+                  {isSubmiting && (
+                    <CircularProgress
+                      color="success"
+                        style={{
+                            width:"20px",
+                            height:"20px",
+                            marginRight:"2px"
+                        }}
+                    />
+                  )}
+                  <span>Save</span>
                 </Button>
               </div>
             </Grid>
           </Grid>
         </form>
       </div>
+      <Toaster />
     </>
   );
 };

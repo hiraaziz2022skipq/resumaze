@@ -71,7 +71,7 @@ const Statistics = () => {
               <i className='ri-arrow-up-s-line text-xl'></i>
             </div>
           </div>
-          <Typography>Total Orders</Typography>
+          <Typography>Total ATS score</Typography>
         </div>
       </CardContent>
     </Card>
