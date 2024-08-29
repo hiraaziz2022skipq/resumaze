@@ -32,6 +32,7 @@ class JobApplicationRead(SQLModel):
     id: Optional[int]
     user_id: Optional[int]
     resume_id: Optional[int]
+    title: Optional[str]
     cover_letter_id: Optional[int]
     job_description: Optional[str]
     created_at: datetime
@@ -56,6 +57,21 @@ async def create_job_application(job_application: JobApplication, db: db_depende
 async def get_job_applications(user_id: int, db: db_dependency):
     job_applications = db.exec(select(JobApplication).where(JobApplication.user_id == user_id)).scalars().all()
     return job_applications
+
+# create update api to update job application title or description or job status
+@router.put("/{job_application_id}/update")
+async def update_job_application(job_application_id: int, job_application: JobApplication, db: db_dependency):
+    db_job_application = db.exec(select(JobApplication).where(JobApplication.id == job_application_id)).scalar()
+    if not db_job_application:
+        raise HTTPException(status_code=404, detail="Job application not found")
+    db_job_application.title = job_application.title
+    db_job_application.job_description = job_application.job_description
+    db_job_application.status = job_application.status
+    db.commit()
+    db.refresh(db_job_application)
+    return db_job_application
+
+
 
 # class BookRead(SQLModel):
 #     id: int

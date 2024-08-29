@@ -4,7 +4,6 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import JSON
 from enum import Enum
 from typing import List, Optional
-from typing import TYPE_CHECKING
 
 class UserRole(Enum):
     employee = "employee"
@@ -175,6 +174,7 @@ class JobApplication(SQLModel, table=True):
     resume: Optional[Resume] = Relationship(back_populates="job_applications")
     cover_letter_id: Optional[int] = Field(default=None, foreign_key="coverletter.id")
     cover_letter: Optional[CoverLetter] = Relationship(back_populates="job_applications")
+    title: Optional[str] = None
     job_description: Optional[str] = None
     created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
     status: JobApplicationStatus = Field(default=JobApplicationStatus.in_progress)
