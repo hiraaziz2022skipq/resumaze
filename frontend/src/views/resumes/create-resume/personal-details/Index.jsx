@@ -20,8 +20,21 @@ import {
 } from "@/redux/create-resume/service";
 import toast, { Toaster } from "react-hot-toast";
 import CircularSpinner from "@/components/spinner/Circular";
+import { CircularProgress } from "@mui/material";
+import {
+  setEligibilityofATSScore,
+  setProfilePercentage,
+} from "@/redux/create-resume/slice";
+import {
+  calculatePercentageOfSteps,
+  checkReqforATSScore,
+} from "@/utils/create-resume/functions";
+import { useDispatch } from "react-redux";
+import { updateResume } from "@/redux/resumes/slice";
 
 const PersonalDetail = ({ resumeId }) => {
+  const dispatch = useDispatch();
+  const [isSavingLoader, setisSavingLoader] = useState(false);
   const [professional_info, setProfessionalInfo] = useState({
     name: "",
     image: "/images/avatars/1.png",
@@ -71,19 +84,56 @@ const PersonalDetail = ({ resumeId }) => {
   };
 
   const handleSave = () => {
+    setisSavingLoader(true);
     if (isFirstTime) {
-      updateProfessionalInfoService(resumeId, professional_info).then((res) => {
-        if (res.status === 200) {
-          toast.success("Updated Successfully!");
+      updateProfessionalInfoService(resumeId, professional_info).then(
+        async (res) => {
+          if (res.status === 200) {
+            const percentage = await calculatePercentageOfSteps(res.data.steps);
+            dispatch(setProfilePercentage(percentage));
+
+            const isElgForAts = checkReqforATSScore(res.data.steps);
+            dispatch(setEligibilityofATSScore(isElgForAts));
+
+            dispatch(
+              updateResume({
+                resumeId: resumeId,
+                singleObj: { professional_info: res.data.professional_info },
+              })
+            );
+
+            toast.success("Updated Successfully!");
+
+            setisSavingLoader(false);
+          } else {
+            setisSavingLoader(false);
+          }
         }
-      });
+      );
     } else {
-      postProfessionalInfoService(resumeId, professional_info).then((res) => {
-        if (res.status === 200) {
-          toast.success("Created Successfully!");
-          setIsFirstTime(true);
+      postProfessionalInfoService(resumeId, professional_info).then(
+        async (res) => {
+          if (res.status === 200) {
+            const percentage = await calculatePercentageOfSteps(res.data.steps);
+            dispatch(setProfilePercentage(percentage));
+
+            const isElgForAts = checkReqforATSScore(res.data.steps);
+            dispatch(setEligibilityofATSScore(isElgForAts));
+
+            dispatch(
+              updateResume({
+                resumeId: resumeId,
+                singleObj: { professional_info: professional_info },
+              })
+            );
+            toast.success("Created Successfully!");
+            setIsFirstTime(true);
+            setisSavingLoader(true);
+          } else {
+            setisSavingLoader(false);
+          }
         }
-      });
+      );
     }
   };
 
@@ -94,6 +144,12 @@ const PersonalDetail = ({ resumeId }) => {
           setProfessionalInfo({
             ...resp.data.professional_info,
           });
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { professional_info: resp.data.professional_info },
+            })
+          );
           setIsFirstTime(true);
         }
         setIsLoading(false);
@@ -266,8 +322,22 @@ const PersonalDetail = ({ resumeId }) => {
                 </Grid>
                 <Grid item xs={12}>
                   <div style={{ textAlign: "right" }}>
-                    <Button variant="contained" onClick={handleSave}>
-                      Save
+                    <Button
+                      disabled={isSavingLoader}
+                      variant="contained"
+                      onClick={handleSave}
+                    >
+                      {isSavingLoader && (
+                        <CircularProgress
+                          color="success"
+                          style={{
+                            width: "20px",
+                            height: "20px",
+                            marginRight: "2px",
+                          }}
+                        />
+                      )}
+                      <span>Save</span>
                     </Button>
                   </div>
                 </Grid>

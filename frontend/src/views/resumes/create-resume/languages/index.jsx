@@ -4,6 +4,9 @@ import {
   getLanguagesService,
   updateLanguagesService,
 } from "@/redux/create-resume/service";
+import { setEligibilityofATSScore, setProfilePercentage } from "@/redux/create-resume/slice";
+import { updateResume } from "@/redux/resumes/slice";
+import { calculatePercentageOfSteps, checkReqforATSScore } from "@/utils/create-resume/functions";
 import {
   Button,
   CardContent,
@@ -22,7 +25,12 @@ import {
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
+import { useDispatch } from "react-redux";
+
+
 const Languages = ({ resumeId }) => {
+  
+  const dispatch = useDispatch();
   const [languages, setLanguages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFirstTime, setIsFirstTime] = useState(false);
@@ -51,6 +59,20 @@ const Languages = ({ resumeId }) => {
     if (isFirstTime) {
       updateLanguagesService(resumeId, { language: languages }).then((res) => {
         if (res.status === 200) {
+
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { languages: res.data.languages },
+            })
+          );
+
           toast.success("Languages Updated Successfully!");
         } else {
           toast.error("Failed to Update Languages.");
@@ -59,6 +81,19 @@ const Languages = ({ resumeId }) => {
     } else {
       addLanguagesService(resumeId, { language: languages }).then((res) => {
         if (res.status === 200) {
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { languages: res.data.languages },
+            })
+          );
+
           toast.success("Languages Created Successfully!");
           setIsFirstTime(true);
         } else {
@@ -74,6 +109,14 @@ const Languages = ({ resumeId }) => {
         if (resp.data.language?.length > 0) {
           const langs = resp.data.language;
           setLanguages([...langs]);
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { languages: langs },
+            })
+          );
+
+
           setIsFirstTime(true);
         }
         setIsLoading(false);

@@ -7,13 +7,20 @@ import {
   getExtraInfoService,
   updateExtraInfoService,
 } from "@/redux/create-resume/service";
-import { Button, CardContent, CardHeader, Divider, Grid } from "@mui/material";
+import { updateResume } from "@/redux/resumes/slice";
+import { Button, CardContent, CardHeader, Divider, Grid, IconButton, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 
+import { useDispatch } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
+import { calculatePercentageOfSteps, checkReqforATSScore } from "@/utils/create-resume/functions";
+import { setEligibilityofATSScore, setProfilePercentage } from "@/redux/create-resume/slice";
 
 
 const ExtraInfo = ({ resumeId }) => {
+
+  
+  const dispatch = useDispatch();
   const buttonProps = {
     variant: "outlined",
     children: "Add Extra Info",
@@ -28,6 +35,20 @@ const ExtraInfo = ({ resumeId }) => {
       .then((res) => {
         if (res.status === 200) {
           setExtraInfo((prevRefs) => prevRefs.filter((ref) => ref.id !== exId));
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { extra: extraInfo.filter((ref) => ref.id !== exId) },
+            })
+          );
+
+
           toast.success("Extra-Info Deleted Successfully!");
         } else {
           toast.error("Failed to Delete Extra-Info.");
@@ -42,11 +63,26 @@ const ExtraInfo = ({ resumeId }) => {
     const { key, value } = newRef;
 
     const formattedRef = { [key]: value };
-    addExtraInfoService(resumeId, formattedRef)
+    addExtraInfoService(resumeId, {extra:[formattedRef]})
       .then((res) => {
         if (res.status === 200) {
-          const newData = res.data;
+          const newData = res.data.extra_info.exta;
           setExtraInfo([...extraInfo, newData]);    
+          
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { extra: [...extraInfo, newData] },
+            })
+          );
+
+
           toast.success("Extra-Info Added Successfully!");
         } else {
           toast.error("Failed to Add Extra-Info.");
@@ -74,6 +110,25 @@ const ExtraInfo = ({ resumeId }) => {
               ExInfo.id === exId ? updatedExtraInfo : ExInfo
             )
           );
+
+          
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: {
+                extra:extraInfo.map((ExInfo) =>
+                  ExInfo.id === exId ? updatedExtraInfo : ExInfo
+                )
+              },
+            })
+          );
+          
           toast.success("Extra-Info Updated Successfully!");
         } else {
           toast.error("Failed to Update Extra-Info.");
@@ -90,6 +145,15 @@ const ExtraInfo = ({ resumeId }) => {
         if (resp.data?.length > 0) {
           const newData = resp.data;
           setExtraInfo([...newData]);
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { extra: newData },
+            })
+          );
+
+
         }
         setIsLoading(false);
       } else {

@@ -328,7 +328,7 @@ export const getLanguagesService = async (resumeId) => {
     const response = await axiosInstance.get(
       `/api/resume/${resumeId}/languages`
     );
-    return response.data;
+    return response;
   } catch (error) {
     return error;
   }
@@ -340,19 +340,19 @@ export const addLanguagesService = async (resumeId, data) => {
       `/api/resume/${resumeId}/languages`,
       data
     );
-    return response.data;
+    return response;
   } catch (error) {
     return error;
   }
 };
 
-export const updateLanguagesService = async (resumeId, languageId, data) => {
+export const updateLanguagesService = async (resumeId, data) => {
   try {
     const response = await axiosInstance.put(
-      `/api/resume/${resumeId}/languages/${languageId}`,
+      `/api/resume/${resumeId}/languages`,
       data
     );
-    return response.data;
+    return response;
   } catch (error) {
     return error;
   }
@@ -411,7 +411,7 @@ export const getExtraInfoService = async (resumeId) => {
     const response = await axiosInstance.get(
       `/api/resume/${resumeId}/extra-info`
     );
-    return response.data;
+    return response;
   } catch (error) {
     return error;
   }
@@ -423,7 +423,7 @@ export const addExtraInfoService = async (resumeId, data) => {
       `/api/resume/${resumeId}/extra-info`,
       data
     );
-    return response.data;
+    return response;
   } catch (error) {
     return error;
   }
@@ -435,7 +435,7 @@ export const updateExtraInfoService = async (resumeId, extraInfoId, data) => {
       `/api/resume/${resumeId}/extra-info/${extraInfoId}`,
       data
     );
-    return response.data;
+    return response;
   } catch (error) {
     return error;
   }

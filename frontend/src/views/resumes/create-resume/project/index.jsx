@@ -14,10 +14,20 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import CircularSpinner from "@/components/spinner/Circular";
 import ProjectCard from "../../ui/ProjectCard";
+import { updateResume } from "@/redux/resumes/slice";
+import { useDispatch } from "react-redux";
+import {
+  calculatePercentageOfSteps,
+  checkReqforATSScore,
+} from "@/utils/create-resume/functions";
+import {
+  setEligibilityofATSScore,
+  setProfilePercentage,
+} from "@/redux/create-resume/slice";
 
 const Project = ({ resumeId }) => {
   // Vars
-
+  const dispatch = useDispatch();
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -35,6 +45,23 @@ const Project = ({ resumeId }) => {
           setProjects((prevProj) =>
             prevProj.map((pro) => (pro.id === projId ? updatedProjects : pro))
           );
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: {
+                projects: projects.map((prj) =>
+                  prj.id === projId ? updatedProjects : prj
+                ),
+              },
+            })
+          );
+
           toast.success("Project Updated Successfully!");
         } else {
           toast.error("Failed to Update Project.");
@@ -52,6 +79,22 @@ const Project = ({ resumeId }) => {
           setProjects((prevProj) =>
             prevProj.filter((prj) => prj.id !== projId)
           );
+
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: {
+                projects: projects.filter((pr) => pr.id !== projId),
+              },
+            })
+          );
+
           toast.success("Project Deleted Successfully!");
         } else {
           toast.error("Failed to Delete Project.");
@@ -68,6 +111,20 @@ const Project = ({ resumeId }) => {
         if (res.status === 200) {
           const newProject = res.data.projects;
           setProjects([...projects, newProject]);
+
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { projects: [...projects, newProject] },
+            })
+          );
+
           toast.success("Project Added Successfully!");
         } else {
           toast.error("Failed to Add Project.");
@@ -84,6 +141,12 @@ const Project = ({ resumeId }) => {
         if (resp.data.length > 0) {
           const projects = resp.data;
           setProjects([...projects]);
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { projects: projects },
+            })
+          );
         }
         setIsLoading(false);
       } else {

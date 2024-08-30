@@ -7,7 +7,6 @@ import { Underline } from "@tiptap/extension-underline";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { TextAlign } from "@tiptap/extension-text-align";
 
-
 import { useEffect, useState } from "react";
 import {
   getProfessionalInfoService,
@@ -16,10 +15,24 @@ import {
 } from "@/redux/create-resume/service";
 import CircularSpinner from "@/components/spinner/Circular";
 
+import { useDispatch, useSelector } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
 import TipTapEditor from "@/components/editor/TipTap/Editor";
+import { updateResume } from "@/redux/resumes/slice";
+import {
+  calculatePercentageOfSteps,
+  checkReqforATSScore,
+} from "@/utils/create-resume/functions";
+import {
+  setEligibilityofATSScore,
+  setProfilePercentage,
+} from "@/redux/create-resume/slice";
 
 const PersonalSummary = ({ resumeId }) => {
+  const dispatch = useDispatch();
+  const {currentResumeData} = useSelector((state) => state.resumesSlice);
+
+  console.log(currentResumeData,"==currentResumeData==")
   const [professional_info, setProfessionalInfo] = useState({
     name: "",
     image: "/images/avatars/1.png",
@@ -59,20 +72,10 @@ const PersonalSummary = ({ resumeId }) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        experiences: [
-          {
-            job_title: "Full Stack Developer",
-            job_description: "Reactjs,nodejs",
-            end_date: "",
-            is_current: true,
-            company_name: "Amazon",
-            start_date: "16/11/1888",
-            location: "karachi",
-          },
-        ],
-        skills: ["React.js", "NodeJs"],
-        Projects: [],
-        Certifications: [],
+        experiences: currentResumeData?.experience,
+        skills: currentResumeData?.skill_set,
+        Projects: currentResumeData?.projects,
+        Certifications:currentResumeData?.certifications,
       }),
     });
 
@@ -96,12 +99,38 @@ const PersonalSummary = ({ resumeId }) => {
     if (isFirstTime) {
       updateProfessionalInfoService(resumeId, profInfo).then((res) => {
         if (res.status === 200) {
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { professional_info: res.data.professional_info },
+            })
+          );
+
           toast.success("Updated Successfully!");
         }
       });
     } else {
       postProfessionalInfoService(resumeId, profInfo).then((res) => {
         if (res.status === 200) {
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { professional_info: res.data.professional_info },
+            })
+          );
+
           toast.success("Created Successfully!");
           setIsFirstTime(true);
         }
@@ -117,6 +146,14 @@ const PersonalSummary = ({ resumeId }) => {
           setProfessionalInfo({
             ...resp.data.professional_info,
           });
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { professional_info: resp.data.professional_info },
+            })
+          );
+
           setIsFirstTime(true);
         }
         setIsLoading(false);
@@ -145,23 +182,23 @@ const PersonalSummary = ({ resumeId }) => {
 
   return (
     <>
-        <CardHeader
-          title="Summary"
-          action={
-            <>
-              <Button
-                variant="contained"
-                aria-haspopup="true"
-                onClick={() => {
-                  fetchSummaries();
-                }}
-              >
-                Generate New Summary
-              </Button>
-            </>
-          }
-        />
-        <CardContent>
+      <CardHeader
+        title="Summary"
+        action={
+          <>
+            <Button
+              variant="contained"
+              aria-haspopup="true"
+              onClick={() => {
+                fetchSummaries();
+              }}
+            >
+              Generate New Summary
+            </Button>
+          </>
+        }
+      />
+      <CardContent>
         <Grid container spacing={5}>
           <Grid item xs={12}>
             <Card className="p-0 border shadow-none">
@@ -177,8 +214,8 @@ const PersonalSummary = ({ resumeId }) => {
               </Button>
             </div>
           </Grid>
-          </Grid>
-        </CardContent>
+        </Grid>
+      </CardContent>
       <Toaster />
     </>
   );
