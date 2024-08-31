@@ -15,6 +15,9 @@ class User(SQLModel, table=True):
     name: str
     email: str
     hashed_password: str = Field(max_length=255, min_length=6)
+    oauth_provider: str | None = Field(default=None)
+    oauth_id: str | None = Field(default=None)
+    session_token: str | None = Field(default=None)
     role: UserRole = Field(default=UserRole.employee, sa_type=SAEnum(UserRole))
     created_at: datetime = Field(default=datetime.utcnow())
     resumes: List["Resume"] = Relationship(back_populates="user")

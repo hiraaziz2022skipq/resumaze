@@ -53,7 +53,7 @@ const CreateResume = () => {
   // STATES
   const [currentStep, setCurrentStep] = useState(0)
   const router = useRouter()
-  const resumeId = 7
+  const resumeId = 19
   const [firstTimeVisit, setFirstTimeVisit] = useState({
     professional_info: false,
     skills: false,
