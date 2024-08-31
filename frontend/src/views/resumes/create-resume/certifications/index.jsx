@@ -14,6 +14,19 @@ import {
   getCertificationsService,
   updateCertificationsService,
 } from "@/redux/create-resume/service";
+import { updateResume } from "@/redux/resumes/slice";
+
+import toast, { Toaster } from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import {
+  calculatePercentageOfSteps,
+  checkReqforATSScore,
+} from "@/utils/create-resume/functions";
+import {
+  setEligibilityofATSScore,
+  setProfilePercentage,
+} from "@/redux/create-resume/slice";
+import CertificationCard from "../../ui/CertificationCard";
 
 const Certificates = ({ resumeId }) => {
   const buttonProps = {
@@ -21,6 +34,8 @@ const Certificates = ({ resumeId }) => {
     children: "Add New Certificate",
     size: "small",
   };
+
+  const dispatch = useDispatch();
 
   const [certifications, setCertifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,6 +50,24 @@ const Certificates = ({ resumeId }) => {
               cert.id === certId ? updatedCertifications : cert
             )
           );
+
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: {
+                certifications: certifications.map((certifi) =>
+                  certifi.id === certId ? updatedCertifications : certifi
+                ),
+              },
+            })
+          );
+
           toast.success("Certificate Updated Successfully!");
         } else {
           toast.error("Failed to Update Certificate.");
@@ -52,6 +85,24 @@ const Certificates = ({ resumeId }) => {
           setCertifications((prevCert) =>
             prevCert.filter((ct) => ct.id !== certId)
           );
+
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          const latestCertifications = certifications.filter(
+            (ct) => ct.id !== certId
+          );
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { certifications: latestCertifications },
+            })
+          );
+
           toast.success("Certificate Deleted Successfully!");
         } else {
           toast.error("Failed to Delete Certificate.");
@@ -68,6 +119,22 @@ const Certificates = ({ resumeId }) => {
         if (res.status === 200) {
           const newCertification = res.data.certifications;
           setCertifications([...certifications, newCertification]);
+
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: {
+                certifications: [...certifications, newCertification],
+              },
+            })
+          );
+
           toast.success("Certificate Added Successfully!");
         } else {
           toast.error("Failed to Add Certificate.");
@@ -83,7 +150,13 @@ const Certificates = ({ resumeId }) => {
       if (resp.status === 200) {
         if (resp.data.length > 0) {
           const allCert = resp.data;
-          setEduction([...allCert]);
+          setCertifications([...allCert]);
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { certifications: allCert },
+            })
+          );
         }
         setIsLoading(false);
       } else {
@@ -111,7 +184,7 @@ const Certificates = ({ resumeId }) => {
       <CardContent>
         {certifications.map((cert, index) => (
           <div key={index}>
-            <CertificationCards
+            <CertificationCard
               key={cert.id}
               cert={cert}
               index={index}
@@ -124,6 +197,7 @@ const Certificates = ({ resumeId }) => {
           </div>
         ))}
       </CardContent>
+      <Toaster />
     </>
   );
 };

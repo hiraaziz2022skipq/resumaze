@@ -7,8 +7,13 @@ import { useEffect, useState } from "react";
 import { getSocialMediaService, postSocialMediaService, updateSocialMediaService } from "@/redux/create-resume/service";
 import toast, { Toaster } from "react-hot-toast";
 import CircularSpinner from "@/components/spinner/Circular";
+import { updateResume } from "@/redux/resumes/slice";
 
+import { useDispatch } from "react-redux";
+import { calculatePercentageOfSteps, checkReqforATSScore } from "@/utils/create-resume/functions";
+import { setEligibilityofATSScore, setProfilePercentage } from "@/redux/create-resume/slice";
 const SocialMedia = ({ resumeId }) => {
+  const dispatch = useDispatch();
 
   const [social_media, setSocialmedia] = useState({
     linkedin: '',
@@ -36,12 +41,42 @@ const SocialMedia = ({ resumeId }) => {
     if (isFirstTime) {
       updateSocialMediaService(resumeId, {social_media : social_media}).then((res) => {
         if (res.status === 200) {
+
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { social_media: res.data.social_media },
+            })
+          );
+
+
           toast.success("Updated Successfully!");
         }
       });
     } else {
       postSocialMediaService(resumeId, {social_media : social_media}).then((res) => {
         if (res.status === 200) {
+
+          const percentage =  calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { social_media: res.data.social_media },
+            })
+          );
+
+
           toast.success("Created Successfully!");
           setIsFirstTime(true);
         }
@@ -58,6 +93,15 @@ const SocialMedia = ({ resumeId }) => {
         setSocialmedia({
           ...newData
         })
+
+        dispatch(
+          updateResume({
+            resumeId: resumeId,
+            singleObj: { social_media: newData },
+          })
+        );
+
+
         setIsFirstTime(true);
         setIsLoading(false);
       } else {

@@ -1,34 +1,39 @@
-import { Grid } from "@mui/material"
-import CongratulationsCard from "../ui/CongratulationsCard"
-import Statistics from "../ui/Statistics"
-import CreateResumeForms from "./main/Index"
-import CreateResumeProgress from "../ui/CreateResumeProgress"
+"use client";
+import { Grid } from "@mui/material";
+import CreateResumeForms from "./main/Index";
+import CreateResumeProgress from "../ui/CreateResumeProgress";
+import ViewResumeCard from "../ui/ViewResumeCard";
+import ATSScoreCard from "../ui/ATSScore";
+import ATSTags from "../ui/ATSTags";
+import { useEffect } from "react";
+import { getAllResumesAction } from "@/redux/resumes/action";
+import { useDispatch, useSelector } from "react-redux";
 
-const CreateResume = () =>{
+const CreateResume = () => {
+  const { allResumeData } = useSelector((state) => state.resumesSlice);
 
-    return(
-        <>  
-    
-         <Grid container spacing={6}>
-          <Grid item xs={12} md={6}>
-            <CongratulationsCard  />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <Statistics/>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <CreateResumeProgress/>
-          </Grid>
-          <Grid item xs={12} md={12}>
-            <CreateResumeForms />
-          </Grid>
+  console.log(allResumeData, "==allResumeData==");
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(getAllResumesAction(15));
+  }, [dispatch]);
+
+  return (
+    <>
+      <Grid container spacing={6}>
+        <Grid item xs={12} md={10}>
+          <ATSTags />
         </Grid>
-        
-        </>
-        
-     
-    )
+        <Grid item xs={12} md={2}>
+          <CreateResumeProgress />
+        </Grid>
+        <Grid item xs={12} md={12}>
+          <CreateResumeForms />
+        </Grid>
+      </Grid>
+    </>
+  );
+};
 
-}
-
-export default CreateResume
+export default CreateResume;

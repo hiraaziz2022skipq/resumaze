@@ -15,10 +15,21 @@ import {
 import CircularSpinner from "@/components/spinner/Circular";
 import EducationCard from "../../ui/EducationCard";
 import { useEffect, useState } from "react";
-
+import { useDispatch } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
+import { updateResume } from "@/redux/resumes/slice";
+import {
+  calculatePercentageOfSteps,
+  checkReqforATSScore,
+} from "@/utils/create-resume/functions";
+import {
+  setEligibilityofATSScore,
+  setProfilePercentage,
+} from "@/redux/create-resume/slice";
 
 const Education = ({ resumeId }) => {
+  const dispatch = useDispatch();
+
   const [education, setEducation] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -36,6 +47,24 @@ const Education = ({ resumeId }) => {
           setEducation((prevEdu) =>
             prevEdu.map((edu) => (edu.id === eduId ? updatedEdu : edu))
           );
+
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: {
+                education: education.map((edu) =>
+                  edu.id === eduId ? updatedEdu : edu
+                ),
+              },
+            })
+          );
+
           toast.success("Education Updated Successfully!");
         } else {
           toast.error("Failed to Update Education.");
@@ -50,7 +79,22 @@ const Education = ({ resumeId }) => {
     deleteEducationService(resumeId, eduId)
       .then((res) => {
         if (res.status === 200) {
-          setEducation((prevEdu) => prevEdu.filter((edu) => edu.id !== eduId));
+          const latestEducation = education.filter((edu) => edu.id !== eduId);
+          setEducation(latestEducation);
+
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { education: latestEducation },
+            })
+          );
+
           toast.success("Education Deleted Successfully!");
         } else {
           toast.error("Failed to Delete Education.");
@@ -67,6 +111,19 @@ const Education = ({ resumeId }) => {
         if (res.status === 200) {
           const newEdu = res.data.education;
           setEducation((prevEducation) => [...prevEducation, newEdu]);
+
+          const percentage = calculatePercentageOfSteps(res.data.steps);
+          dispatch(setProfilePercentage(percentage));
+
+          const isElgForAts = checkReqforATSScore(res.data.steps);
+          dispatch(setEligibilityofATSScore(isElgForAts));
+
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { education: [...education, newEdu] },
+            })
+          );
           toast.success("Education Added Successfully!");
         } else {
           toast.error("Failed to Add Education.");
@@ -83,6 +140,12 @@ const Education = ({ resumeId }) => {
         if (resp.data.length > 0) {
           const allEdu = resp.data;
           setEducation([...allEdu]);
+          dispatch(
+            updateResume({
+              resumeId: resumeId,
+              singleObj: { education: allEdu },
+            })
+          );
         }
         setIsLoading(false);
       } else {

@@ -10,6 +10,7 @@ import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 import IconButton from "@mui/material/IconButton";
 
+import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
 import CertificationsAdd from "@/components/dialogs/resume-create/certification";
 import OpenDialogOnElementClick from "@components/dialogs/OpenDialogOnElementClick";
 
