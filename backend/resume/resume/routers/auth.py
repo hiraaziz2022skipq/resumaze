@@ -28,8 +28,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 oauth = OAuth()
 oauth.register(
     name='google',
-    # client_id='606654103650',
-    # client_secret='',
+  
     authorize_url='https://accounts.google.com/o/oauth2/auth',
     authorize_params=None,
     access_token_url='https://accounts.google.com/o/oauth2/token',
