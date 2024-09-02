@@ -89,15 +89,15 @@ class UserInput(BaseModel):
 
 # Helper function to update resume steps
 def update_resume_steps(resume_id: int, field: str, session: Session, is_complete: bool):
-    resume_steps = session.get(ResumeSteps, resume_id) or ResumeSteps(resume_id=resume_id)
+    resume_steps = session.exec(select(ResumeSteps).where(ResumeSteps.resume_id == resume_id)).scalars().first()
     setattr(resume_steps, field, is_complete)
     session.add(resume_steps)
 
 def get_resume_steps(resume_id: int, session: Session) -> dict:
-    resume_steps = session.get(ResumeSteps, resume_id)
+    resume_steps = session.exec(select(ResumeSteps).where(ResumeSteps.resume_id == resume_id)).scalars().first()
     if not resume_steps:
         return {}
-    return resume_steps.model_dump()
+    return resume_steps
 
 def hash_password(password: str) -> str:
     # This is a placeholder. Use a proper password hashing library like bcrypt
@@ -129,14 +129,19 @@ def create_user(user_input: UserInput, session: db_dependency):
 
     return new_user
 
-# Add api to create resume , in which it is recieving userid and resume type in body
+# Add api to create resume , and also create steps table entry
 @router.post("/create-resume", status_code=status.HTTP_201_CREATED)
 def create_resume(resume_input: Resume, session: db_dependency):
     new_resume = Resume(**resume_input.model_dump())
     session.add(new_resume)
     session.commit()
     session.refresh(new_resume)
-    return new_resume
+    resume_steps = ResumeSteps(resume_id=new_resume.id, professional_info=False, social_media=False, experience=False, education=False, projects=False, certifications=False, languages=False, references=False, extra_info=False)
+    session.add(resume_steps)
+    session.commit()
+    session.refresh(resume_steps)
+    fresh_resume = session.get(Resume, new_resume.id)
+    return fresh_resume
 
 class ResumeRead(SQLModel):
     id: int
@@ -166,13 +171,13 @@ def get_resumes(user_id: int, session: db_dependency):
     resumes = session.exec(select(Resume).where(Resume.user_id == user_id)).scalars().all()
     return resumes
 
-# API routes
+# get steps of a resume
 @router.get("/{resume_id}/steps")
 def get_steps(resume_id: int, session: db_dependency):
     steps = get_resume_steps(resume_id, session)
     if not steps:
         raise HTTPException(status_code=404, detail="Resume steps not found")
-    return JSONResponse(content=steps)
+    return steps
 
 #skills route
 @router.get("/{resume_id}/skills")
@@ -230,6 +235,7 @@ def post_professional_info(resume_id: int, info: ProfessionalInfoInput, session:
     session.commit()
     session.refresh(new_professional_info)
     steps = get_resume_steps(resume_id, session)
+    print("steps",steps)
     return JSONResponse(content=jsonable_encoder({
         "professional_info": new_professional_info.model_dump(),
         "steps": steps

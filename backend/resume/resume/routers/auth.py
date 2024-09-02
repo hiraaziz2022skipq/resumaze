@@ -1,6 +1,6 @@
 from datetime import timedelta, datetime
 from typing import Annotated
-from fastapi import Depends, HTTPException, APIRouter,status
+from fastapi import Depends, HTTPException, APIRouter, Request, status
 from sqlmodel import Session, SQLModel, select
 from resume.db import engine
 from resume.model import User
@@ -9,6 +9,8 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from datetime import datetime, timedelta
+from authlib.integrations.starlette_client import OAuth
+from fastapi.responses import RedirectResponse
 
 router = APIRouter(
     prefix="/api/auth",
@@ -21,6 +23,20 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+
+# Initialize OAuth
+oauth = OAuth()
+oauth.register(
+    name='google',
+  
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    authorize_params=None,
+    access_token_url='https://accounts.google.com/o/oauth2/token',
+    access_token_params=None,
+    refresh_token_url=None,
+    redirect_uri='https://adb2-2407-aa80-314-f623-addf-e2c8-34ad-5dce.ngrok-free.app',
+    client_kwargs={'scope': 'openid profile email'},
+)
 
 def get_session():
     with Session(engine) as session:
@@ -73,10 +89,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    print(token)
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print(payload)
         email: str = payload.get("sub")
+        print(email)
         if email is None:
             raise credentials_exception
         token_data = TokenData(email=email, id=payload.get("id"))
@@ -87,12 +104,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         user = session.exec(statement).first()
         if user is None:
             raise credentials_exception
+        print(user.id)
     return user
-
-# {
-#   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJoaW5hMTIzQGdtYWlsLmNvbSIsImlkIjoxOSwiZXhwIjoxNzI1MDkyMTMxfQ.7IK66Sr-sdNpW7Ab-aMaPKUFEnbhdTGHZozvhVeJBp0",
-#   "token_type": "bearer"
-#   }
 
 # User registration API
 @router.post("/register", response_model=Token)
@@ -113,11 +126,12 @@ async def register(user_create: UserCreate):
 
 @router.post("/login", response_model=Token)
 async def login(user_login: UserLogin):
+   
     with Session(engine) as session:
         statement = select(User).where(User.email == user_login.email)
         user = session.exec(statement).first()
-        print(user)
-        if not user or not verify_password(user_login.password, user.hashed_password):
+        password_check = verify_password(user_login.password, user.hashed_password)
+        if not user or not password_check:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
@@ -126,12 +140,44 @@ async def login(user_login: UserLogin):
         # Create JWT token after successful login
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(data={"sub": user.email, "id": user.id}, expires_delta=access_token_expires)
-        print(access_token)
         user.session_token = access_token
         session.add(user)
         session.commit()
-    return {"access_token": access_token, "token_type": "bearer", "id": user.id}
+    return {"access_token": user.session_token, "token_type": "bearer", "id": user.id}
 
 @router.get("/users/me", response_model=User)
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+@router.get('/google/login')
+async def google_login(request: Request):
+    print("google login", request)
+    redirect_uri = request.url_for('google_callback')
+    print("redirect_uri", redirect_uri)
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@router.get('/google/callback')
+async def google_callback(request: Request):
+    token = await oauth.google.authorize_access_token(request)
+    user_info = await oauth.google.parse_id_token(request, token)
+    email = user_info['email']
+    name = user_info['name']
+
+    with Session(engine) as session:
+        statement = select(User).where(User.email == email)
+        user = session.exec(statement).first()
+        if not user:
+            user = User(name=name, email=email, role='user')
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+        
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(data={"sub": user.email, "id": user.id}, expires_delta=access_token_expires)
+        user.session_token = access_token
+        session.add(user)
+        session.commit()
+    
+    response = RedirectResponse(url='/')
+    response.set_cookie(key="access_token", value=access_token, httponly=True)
+    return response

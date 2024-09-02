@@ -33,6 +33,8 @@ import { useSettings } from '@core/hooks/useSettings'
 const LoginV2 = ({ mode }) => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   // Vars
   const darkImg = '/images/pages/auth-v2-mask-1-dark.png'
@@ -56,6 +58,33 @@ const LoginV2 = ({ mode }) => {
   )
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
+
+  const handleLogin = async e => {
+    e.preventDefault()
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      })
+      console.log(response)
+      if (!response.ok) {
+        throw new Error('Login failed')
+      }
+      const data = await response.json()
+      console.log(data)
+      sessionStorage.setItem('access_token', data.access_token)
+      router.push('/getuser')
+    } catch (error) {
+      console.error('Error logging in:', error)
+    }
+  }
+
+  const handleGoogleLogin = () => {
+    window.location.href = 'http://localhost:8000/api/auth/google/login'
+  }
 
   return (
     <div className='flex bs-full justify-center'>
@@ -85,20 +114,14 @@ const LoginV2 = ({ mode }) => {
             <Typography variant='h4'>{`Welcome to ${themeConfig.templateName}! 👋🏻`}</Typography>
             <Typography className='mbs-1'>Please sign-in to your account and start the adventure</Typography>
           </div>
-          <form
-            noValidate
-            autoComplete='off'
-            onSubmit={e => {
-              e.preventDefault()
-              router.push('/')
-            }}
-            className='flex flex-col gap-5'
-          >
-            <TextField autoFocus fullWidth label='Email' />
+          <form noValidate autoComplete='off' onSubmit={handleLogin} className='flex flex-col gap-5'>
+            <TextField autoFocus fullWidth label='Email' value={email} onChange={e => setEmail(e.target.value)} />
             <TextField
               fullWidth
               label='Password'
               type={isPasswordShown ? 'text' : 'password'}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position='end'>
@@ -131,16 +154,7 @@ const LoginV2 = ({ mode }) => {
             </div>
             <Divider className='gap-3 text-textPrimary'>or</Divider>
             <div className='flex justify-center items-center gap-2'>
-              <IconButton size='small' className='text-facebook'>
-                <i className='ri-facebook-fill' />
-              </IconButton>
-              <IconButton size='small' className='text-twitter'>
-                <i className='ri-twitter-fill' />
-              </IconButton>
-              <IconButton size='small' className='text-textPrimary'>
-                <i className='ri-github-fill' />
-              </IconButton>
-              <IconButton size='small' className='text-googlePlus'>
+              <IconButton size='small' className='text-googlePlus' onClick={handleGoogleLogin}>
                 <i className='ri-google-fill' />
               </IconButton>
             </div>
