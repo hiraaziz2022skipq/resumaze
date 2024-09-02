@@ -8,18 +8,29 @@ import {
   updateExtraInfoService,
 } from "@/redux/create-resume/service";
 import { updateResume } from "@/redux/resumes/slice";
-import { Button, CardContent, CardHeader, Divider, Grid, IconButton, Typography } from "@mui/material";
+import {
+  Button,
+  CardContent,
+  CardHeader,
+  Divider,
+  Grid,
+  IconButton,
+  Typography,
+} from "@mui/material";
 import { useEffect, useState } from "react";
 
 import { useDispatch } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
-import { calculatePercentageOfSteps, checkReqforATSScore } from "@/utils/create-resume/functions";
-import { setEligibilityofATSScore, setProfilePercentage } from "@/redux/create-resume/slice";
-
+import {
+  calculatePercentageOfSteps,
+  checkReqforATSScore,
+} from "@/utils/create-resume/functions";
+import {
+  setEligibilityofATSScore,
+  setProfilePercentage,
+} from "@/redux/create-resume/slice";
 
 const ExtraInfo = ({ resumeId }) => {
-
-  
   const dispatch = useDispatch();
   const buttonProps = {
     variant: "outlined",
@@ -48,7 +59,6 @@ const ExtraInfo = ({ resumeId }) => {
             })
           );
 
-
           toast.success("Extra-Info Deleted Successfully!");
         } else {
           toast.error("Failed to Delete Extra-Info.");
@@ -63,12 +73,16 @@ const ExtraInfo = ({ resumeId }) => {
     const { key, value } = newRef;
 
     const formattedRef = { [key]: value };
-    addExtraInfoService(resumeId, {extra:[formattedRef]})
+    addExtraInfoService(resumeId, { extra: [formattedRef] })
       .then((res) => {
         if (res.status === 200) {
-          const newData = res.data.extra_info.exta;
-          setExtraInfo([...extraInfo, newData]);    
-          
+          const newData = {
+            id: res.data.extra_info.id,
+            ...res.data.extra_info.extra[0], 
+          };
+
+          setExtraInfo([...extraInfo, newData]);
+
           const percentage = calculatePercentageOfSteps(res.data.steps);
           dispatch(setProfilePercentage(percentage));
 
@@ -81,7 +95,6 @@ const ExtraInfo = ({ resumeId }) => {
               singleObj: { extra: [...extraInfo, newData] },
             })
           );
-
 
           toast.success("Extra-Info Added Successfully!");
         } else {
@@ -101,7 +114,7 @@ const ExtraInfo = ({ resumeId }) => {
     const formattedData = { [key]: value };
 
     // Update extra info service call with the formatted object
-    updateExtraInfoService(resumeId, exId, formattedData)
+    updateExtraInfoService(resumeId, exId, { extra:[formattedData]})
       .then((res) => {
         if (res.status === 200) {
           const updatedExtraInfo = res.data;
@@ -111,7 +124,6 @@ const ExtraInfo = ({ resumeId }) => {
             )
           );
 
-          
           const percentage = calculatePercentageOfSteps(res.data.steps);
           dispatch(setProfilePercentage(percentage));
 
@@ -122,13 +134,13 @@ const ExtraInfo = ({ resumeId }) => {
             updateResume({
               resumeId: resumeId,
               singleObj: {
-                extra:extraInfo.map((ExInfo) =>
+                extra: extraInfo.map((ExInfo) =>
                   ExInfo.id === exId ? updatedExtraInfo : ExInfo
-                )
+                ),
               },
             })
           );
-          
+
           toast.success("Extra-Info Updated Successfully!");
         } else {
           toast.error("Failed to Update Extra-Info.");
@@ -140,11 +152,16 @@ const ExtraInfo = ({ resumeId }) => {
   };
 
   useEffect(() => {
-    getExtraInfoService(resumeId).then((resp) => {
-      if (resp.status === 200) {
-        if (resp.data?.length > 0) {
-          const newData = resp.data;
-          setExtraInfo([...newData]);
+    getExtraInfoService(resumeId)
+      .then((resp) => {
+        console.log(resp, "==responseGetExtraInfo==");
+        if (resp.status === 200) {
+          const newData = resp.data.map((item) => ({
+            id: item.id,
+            ...item.extra[0], // Assuming extra is an array with a single object.
+          }));
+
+          setExtraInfo(newData);
 
           dispatch(
             updateResume({
@@ -152,18 +169,17 @@ const ExtraInfo = ({ resumeId }) => {
               singleObj: { extra: newData },
             })
           );
-
-
         }
         setIsLoading(false);
-      } else {
+      })
+      .catch(() => {
         setIsLoading(false);
-      }
-    });
+      });
   }, [resumeId]);
 
   if (isLoading) return <CircularSpinner />;
 
+  console.log(extraInfo, "==extrainf==");
   return (
     <>
       <CardHeader
@@ -180,7 +196,7 @@ const ExtraInfo = ({ resumeId }) => {
       />
       <CardContent>
         <Grid container spacing={5}>
-          {extraInfo.map((item, index) => (
+          {extraInfo.map((item) => (
             <Grid item xs={12} sm={6} key={item.id}>
               <div className="flex items-center justify-between">
                 <div className="flex flex-col gap-2">
@@ -202,7 +218,7 @@ const ExtraInfo = ({ resumeId }) => {
                   >
                     <i className="ri-delete-bin-7-line text-textSecondary" />
                   </IconButton>
-                  <OpenDialogOnElementClick
+                  {/* <OpenDialogOnElementClick
                     element={IconButton}
                     elementProps={{
                       children: (
@@ -216,7 +232,7 @@ const ExtraInfo = ({ resumeId }) => {
                       id: item.id,
                       onFinish: onEdit,
                     }}
-                  />
+                  /> */}
                 </div>
               </div>
               <Divider orientation="horizontal" className="mt-2" />
@@ -224,6 +240,7 @@ const ExtraInfo = ({ resumeId }) => {
           ))}
         </Grid>
       </CardContent>
+
       <Toaster />
     </>
   );

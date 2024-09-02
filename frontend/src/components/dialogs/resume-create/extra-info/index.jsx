@@ -49,8 +49,19 @@ const ExtraInfoAdd = ({
   };
 
   useEffect(() => {
-    setCardData(data ?? initialCardData);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (data) {
+      
+      const { id, ...rest } = data;
+      const key = Object.keys(rest)[0]; 
+      const value = rest[key];  
+
+      setCardData({
+        key,
+        value,
+      });
+    } else {
+      setCardData(initialCardData);
+    }
   }, [open]);
 
   return (

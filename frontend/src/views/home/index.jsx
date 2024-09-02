@@ -35,7 +35,7 @@ const HomePage = () => {
                 <Typography>Check your resume in your profile.</Typography>
               </div>
               <Button variant="contained" onClick={()=>{
-                setOpen(true)
+                
               }}>View Resume</Button>
             </Grid>
             <Grid
@@ -53,7 +53,7 @@ const HomePage = () => {
           </Grid>
         </CardContent>
       </Card>
-      <Drawer
+      {/* <Drawer
       open={open}
       anchor='right'
       variant='temporary'
@@ -64,7 +64,7 @@ const HomePage = () => {
       sx={{ '& .MuiDrawer-paper': { width: { xs: 300, sm: 700 } } }}
     > 
     <Template1 resumeData={resumeFakeData}/>
-    </Drawer>
+    </Drawer> */}
     </>
   );
 };

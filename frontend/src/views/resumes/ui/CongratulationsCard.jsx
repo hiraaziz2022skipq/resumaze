@@ -1,18 +1,33 @@
 "use client";
-import { useImageVariant } from "@/@core/hooks/useImageVariant";
-import Template1 from "@/components/templates/template1";
-import resumeFakeData from "@/fake-data/resume-fake-data";
-import { Button, Card, CardContent, Drawer, Grid, Typography } from "@mui/material";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  Drawer,
+  Grid,
+  Popper,
+  Typography,
+} from "@mui/material";
+import { Unstable_Popup as BasePopup } from "@mui/base/Unstable_Popup";
 import { useState } from "react";
-import { useSelector } from "react-redux";
+import CreateResumeTitle from "./CreateResumeTitleUi";
 
 const CongratulationsCard = () => {
-
-  const darkImg = '/images/cards/user-john-dark.png'
-  const lightImg = '/images/cards/user-john-light.png'
+  const darkImg = "/images/cards/user-john-dark.png";
+  const lightImg = "/images/cards/user-john-light.png";
 
   // Hooks
-  const image = lightImg 
+  const image = lightImg;
+
+  const [anchor, setAnchor] = useState(null);
+
+  const handleClick = (event) => {
+    setAnchor(anchor ? null : event.currentTarget);
+  };
+
+  const open = Boolean(anchor);
+  const id = open ? "simple-popper" : undefined;
 
   return (
     <>
@@ -32,9 +47,27 @@ const CongratulationsCard = () => {
                 <Typography>You have done 68% 😎.</Typography>
                 <Typography>Check your resume in your profile.</Typography>
               </div>
-              <Button variant="contained" onClick={()=>{
-        
-              }}>Create Resume</Button>
+              <Button variant="contained" onClick={handleClick}>
+                Create Resume
+              </Button>
+              <Popper
+                id={id}
+                open={open}
+                anchorEl={anchor}
+                placement="bottom"
+                disablePortal
+                // modifiers={[
+                //   {
+                //     name: "offset",
+                //     options: {
+                //       offset: [0, 8], // Adjust this to control the vertical distance from the button
+                //     },
+                //   },
+                // ]}
+                // style={{ transformOrigin: "center top" }}
+              >
+                <CreateResumeTitle />
+              </Popper>
             </Grid>
             <Grid
               item

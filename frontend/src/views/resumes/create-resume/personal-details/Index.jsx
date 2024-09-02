@@ -102,9 +102,9 @@ const PersonalDetail = ({ resumeId }) => {
               })
             );
 
+            setisSavingLoader(false);
             toast.success("Updated Successfully!");
 
-            setisSavingLoader(false);
           } else {
             setisSavingLoader(false);
           }
@@ -128,7 +128,7 @@ const PersonalDetail = ({ resumeId }) => {
             );
             toast.success("Created Successfully!");
             setIsFirstTime(true);
-            setisSavingLoader(true);
+            setisSavingLoader(false);
           } else {
             setisSavingLoader(false);
           }

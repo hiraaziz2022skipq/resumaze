@@ -14,24 +14,22 @@ import PersonalSummary from '../personal-summary/Index'
 import SocialMedia from '../social-media'
 import References from '../reference'
 import ExtraInfo from '../extra-info'
-
-const CreateResumeForms = () => {
+const CreateResumeForms = ({id}) => {
   const [currentStep, setCurrentStep] = useState(0)
 
-  const resumeId = 19
-
+ 
   const currentContent = [
-    <PersonalDetail resumeId={resumeId} />,
-    <EmploymentHistory resumeId={resumeId} />,
-    <Education resumeId={resumeId} />,
-    <Project resumeId={resumeId} />,
-    <Certificates resumeId={resumeId} />,
-    <Skills resumeId={resumeId} />,
-    <Languages resumeId={resumeId} />,
-    <PersonalSummary resumeId={resumeId} />,
-    <SocialMedia resumeId={resumeId} />,
-    <References resumeId={resumeId} />,
-    <ExtraInfo resumeId={resumeId} />
+    <PersonalDetail resumeId={id} />,
+    <EmploymentHistory resumeId={id} />,
+    <Education resumeId={id} />,
+    <Project resumeId={id} />,
+    <Certificates resumeId={id} />,
+    <Skills resumeId={id} />,
+    <Languages resumeId={id} />,
+    <PersonalSummary resumeId={id} />,
+    <SocialMedia resumeId={id} />,
+    <References resumeId={id} />,
+    <ExtraInfo resumeId={id} />
   ]
 
   const handleNext = () => {

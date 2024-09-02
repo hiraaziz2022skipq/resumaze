@@ -13,12 +13,12 @@ const AppReactApexCharts = dynamic(() =>
   import("@/libs/styles/AppReactApexCharts")
 );
 
-const CreateResumeProgress = () => {
+const CreateResumeProgress = ({id}) => {
   const {resumePercentage} = useSelector((state) => state.CreateResume);
   const dispatch = useDispatch()
 
   useEffect(()=>{
-    getStepsService(20).then( async (resp) => {
+    getStepsService(id).then( async (resp) => {
       if (resp.status === 200) {
         if (resp.data) {
           const percentage = await calculatePercentageOfSteps(resp.data)

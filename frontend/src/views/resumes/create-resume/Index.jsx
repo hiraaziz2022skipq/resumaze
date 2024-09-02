@@ -9,7 +9,12 @@ import { useEffect } from "react";
 import { getAllResumesAction } from "@/redux/resumes/action";
 import { useDispatch, useSelector } from "react-redux";
 
+import { useParams } from 'next/navigation'
+
 const CreateResume = () => {
+  const { id } = useParams();
+
+
   const { allResumeData } = useSelector((state) => state.resumesSlice);
 
   console.log(allResumeData, "==allResumeData==");
@@ -23,13 +28,13 @@ const CreateResume = () => {
     <>
       <Grid container spacing={6}>
         <Grid item xs={12} md={10}>
-          <ATSTags />
+          <ATSTags id={id} />
         </Grid>
         <Grid item xs={12} md={2}>
-          <CreateResumeProgress />
+          <CreateResumeProgress id={id} />
         </Grid>
         <Grid item xs={12} md={12}>
-          <CreateResumeForms />
+          <CreateResumeForms id={id} />
         </Grid>
       </Grid>
     </>

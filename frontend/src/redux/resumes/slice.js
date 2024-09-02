@@ -3,7 +3,8 @@ import { getAllResumesAction } from "./action";
 
 const initialState = {
   allResumeData: [],
-  currentResumeData : {}
+  currentResumeData : {},
+  isAllResumeDataLoading : true
 };
 
 const resumesSlice = createSlice({
@@ -39,11 +40,16 @@ const resumesSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(getAllResumesAction.pending, (state) => {})
+      .addCase(getAllResumesAction.pending, (state) => {
+        state.isAllResumeDataLoading = true
+      })
       .addCase(getAllResumesAction.fulfilled, (state, { payload }) => {
         state.allResumeData = payload.data;
+        state.isAllResumeDataLoading = false
       })
-      .addCase(getAllResumesAction.rejected, (state, action) => {});
+      .addCase(getAllResumesAction.rejected, (state, action) => {
+        state.isAllResumeDataLoading = false
+      });
   },
 });
 

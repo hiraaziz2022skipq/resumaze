@@ -51,9 +51,11 @@ const AppReactApexCharts = dynamic(() => import('@/libs/styles/AppReactApexChart
 
 const CreateResume = () => {
   // STATES
+
+  const router = useRouter();
+  const { id } = router.query; // Access the 'id' from the URL
+  const resumeId = id
   const [currentStep, setCurrentStep] = useState(0)
-  const router = useRouter()
-  const resumeId = 19
   const [firstTimeVisit, setFirstTimeVisit] = useState({
     professional_info: false,
     skills: false,

@@ -2,6 +2,17 @@
 
 import axiosInstance from "@/utils/axiosInstance";
 
+// Crate Resume Service
+export const createResumeService = async (data) => {
+  try {
+    const response = await axiosInstance.post("/api/resume/create-resume", data);
+    return response;
+  } catch (error) {
+    return error;
+  }
+};
+
+
 // Resume Service
 export const createUserService = async (data) => {
   try {
@@ -432,7 +443,7 @@ export const addExtraInfoService = async (resumeId, data) => {
 export const updateExtraInfoService = async (resumeId, extraInfoId, data) => {
   try {
     const response = await axiosInstance.put(
-      `/api/resume/${resumeId}/extra-info/${extraInfoId}`,
+      `/api/resume/${resumeId}/extra_info/${extraInfoId}`,
       data
     );
     return response;
