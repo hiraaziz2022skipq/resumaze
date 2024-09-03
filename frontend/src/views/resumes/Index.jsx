@@ -14,7 +14,7 @@ const ResumesPage = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getAllResumesAction(13));
+    dispatch(getAllResumesAction(15));
 
     return  () =>{
         
