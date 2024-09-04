@@ -18,28 +18,27 @@ const ResumeList = ({ allResumeData }) => {
   const [title, setTitle] = useState([]);
   const [currentTitle, setCurrentTitle] = useState(null);
   const [currentResume, setCurrentResume] = useState([]);
- 
 
   useEffect(() => {
     // Filter titles based on resumeType
-    const filteredTitles = allResumeData
-      .filter((resume) => resume.type === resumeType)
-      .map((resume) => resume.title);
+    const filteredTitles = allResumeData.filter(
+      (resume) => resume.type === resumeType
+    );
     setTitle(filteredTitles);
 
     // Reset current title and resume when the type changes
-    setCurrentTitle(filteredTitles.length > 0 ? filteredTitles[0] : "");
+    setCurrentTitle(filteredTitles.length > 0 ? filteredTitles[0].id : "");
   }, [resumeType, allResumeData]);
 
   useEffect(() => {
     // Find the resume data based on the currentTitle
     const selectedResume = allResumeData.find(
-      (resume) => resume.title === currentTitle && resume.type === resumeType
+      (resume) => resume.id === currentTitle && resume.type === resumeType
     );
     setCurrentResume(selectedResume);
   }, [currentTitle, resumeType, allResumeData]);
 
-  console.log(title,"title",currentTitle,"currentTItle")
+  console.log(title, "title", currentTitle, "currentTItle", currentResume);
 
   if (allResumeData.length === 0) return <Typography>No Data..</Typography>;
   return (
@@ -67,20 +66,30 @@ const ResumeList = ({ allResumeData }) => {
                 <Select
                   label="Resume Title"
                   value={currentTitle || ""}
-                  onChange={(e) => setResumeType(e.target.value)}
+                  onChange={(e) => setCurrentTitle(e.target.value)}
                 >
-                  {title.map((value) => (
-                     <MenuItem key={value} value={value}>{value}</MenuItem>
+                  {title.map((item) => (
+                    <MenuItem key={item.id} value={item.id}>
+                      {item.title}
+                    </MenuItem>
                   ))}
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} sm={12}>
-              <DefaultTemplateList currentResume={currentResume}/>
-            </Grid>
-            <Grid item xs={12} sm={12}>
-              <TemplatesList currentResume={currentResume}/>
-            </Grid>
+            {currentResume ? (
+              <>
+                <Grid item xs={12} sm={12}>
+                  <DefaultTemplateList currentResume={currentResume} />
+                </Grid>
+                <Grid item xs={12} sm={12}>
+                  <TemplatesList currentResume={currentResume} />
+                </Grid>
+              </>
+            ) : (
+              <Grid item xs={12} sm={12}>
+                <Typography>No Resume..</Typography>
+              </Grid>
+            )}
           </Grid>
         </CardContent>
       </Card>

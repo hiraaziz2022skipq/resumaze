@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getAllResumesAction } from "./action";
+import { getAllResumesAction, getResumeById, updateResumeById } from "./action";
 
 const initialState = {
   allResumeData: [],
@@ -49,6 +49,26 @@ const resumesSlice = createSlice({
       })
       .addCase(getAllResumesAction.rejected, (state, action) => {
         state.isAllResumeDataLoading = false
+      })
+      .addCase(getResumeById.pending, (state) => {
+       
+      })
+      .addCase(getResumeById.fulfilled, (state, { payload }) => {
+        state.currentResumeData = payload.data;
+      
+      })
+      .addCase(getResumeById.rejected, (state, action) => {
+       
+      })
+
+      .addCase(updateResumeById.pending, (state) => {
+       
+      })
+      .addCase(updateResumeById.fulfilled, (state, { payload }) => {
+        
+      })
+      .addCase(updateResumeById.rejected, (state, action) => {
+       
       });
   },
 });

@@ -1,6 +1,9 @@
 export const calculatePercentageOfSteps = (data) => {
-  const totalSteps = Object.keys(data).length;
-  const completedSteps = Object.values(data).filter((status) => status).length;
+  const relevantKeys = Object.keys(data).filter(
+    (key) => !["id", "resume_id"].includes(key)
+  );
+  const totalSteps = relevantKeys.length;
+  const completedSteps = relevantKeys.filter((key) => data[key]).length;
   const percentage = Math.round((completedSteps / totalSteps) * 100);
   return percentage;
 };

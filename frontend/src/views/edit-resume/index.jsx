@@ -1,28 +1,36 @@
-import Template1 from "@/components/templates/template1";
-import EditResumeForms from "./pages/EditResumeForms";
-import resumeFakeData from "@/fake-data/resume-fake-data";
+'use client';
 import { Grid } from "@mui/material";
 import HorizontalLinearAlternativeLabelStepper from "@/components/stepper/StepperMui";
 import { STEPS } from "@/utils/create-resume/Steps";
+import ATSTags from "../resumes/ui/ATSTags";
+import CreateResumeProgress from "../resumes/ui/CreateResumeProgress";
+import CreateResumeForms from "../resumes/create-resume/main/Index";
+import { getResumeById } from "@/redux/resumes/action";
+import { useDispatch } from "react-redux";
+import { useParams } from "next/navigation";
+import { useEffect } from "react";
 
 const EditResumePage = () => {
+  const { id } = useParams();
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(getResumeById(id));
+  }, [dispatch]);
+
   return (
     <>
-
-      <Grid container spacing={1}>
-        {/* <Grid item xs={12}>
-                <HorizontalLinearAlternativeLabelStepper
-                  steps={STEPS}
-                  currentStep={0}
-                  setCurrentStep={() => {}}
-                />
-        </Grid> */}
-        <Grid item xs={12} md={12}>
-            <EditResumeForms isEdit={true}/>
+      <Grid container spacing={6}>
+        <Grid item xs={12} md={10}>
+          <ATSTags id={id} />
         </Grid>
-        {/* <Grid item xs={12} md={12}>
-        <Template1 resumeData={resumeFakeData}/>
-        </Grid> */}
+        <Grid item xs={12} md={2}>
+          <CreateResumeProgress id={id} />
+        </Grid>
+        <Grid item xs={12} md={12}>
+          <CreateResumeForms id={id} />
+        </Grid>
       </Grid>
     </>
   );
