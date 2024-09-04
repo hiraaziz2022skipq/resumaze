@@ -1,4 +1,6 @@
 import Template1 from "@/components/templates/template1";
+import ResumeTemp3 from "@/components/templates/template3/Index";
+import ResumeTemp4 from "@/components/templates/template4/Index";
 import ResumeTemplate2 from "@/components/templates/templates2";
 import resumeFakeData from "@/fake-data/resume-fake-data";
 import { Box } from "@mui/material";
@@ -31,7 +33,7 @@ const ViewResume = () => {
           objectFit: "contain", // Maintain aspect ratio
         }}
       /> */}
-      <ResumeTemplate2/>
+      <ResumeTemp3/>
       {/* <Template1 resumeData={resumeFakeData}/> */}
     </Box>
   );
