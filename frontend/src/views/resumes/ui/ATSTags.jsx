@@ -2,6 +2,7 @@
 import { useImageVariant } from "@/@core/hooks/useImageVariant";
 import Template1 from "@/components/templates/template1";
 import resumeFakeData from "@/fake-data/resume-fake-data";
+import { updateResumeById } from "@/redux/resumes/action";
 import {
   Button,
   Card,
@@ -11,10 +12,14 @@ import {
   Grid,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
 
-const ATSTags = () => {
+import toast, { Toaster } from "react-hot-toast";
+import { useDispatch, useSelector } from "react-redux";
+
+const ATSTags = ({id}) => {
+
+  const dispatch = useDispatch()
   const darkImg = "/images/cards/user-john-dark.png";
   const lightImg = "/images/cards/user-john-light.png";
   const [tags, setTags] = useState([]);
@@ -24,6 +29,25 @@ const ATSTags = () => {
 
   const { currentResumeData } = useSelector((state) => state.resumesSlice);
   const { iselgforAtsScore } = useSelector((state) => state.CreateResume);
+
+  const handleSaveTagsAndScore = (score = 0 , ats_tags = []) =>{
+    const payload = {
+      resumeId:id,
+      data:{
+        id:id,
+        ats_score:score,
+        ats_tags:ats_tags,
+        user_id:15
+      }
+    }
+    dispatch(updateResumeById(payload)).then(({payload}) =>{
+      if(payload.status == 200){
+        toast.success("ATS Score & Tags Updated Successfully!");
+      }else {
+        toast.error("Failed to Update.");
+      }
+    })
+  }
 
   const generateATSScore = async () => {
     const response = await fetch("/api/atsCalculation", {
@@ -44,10 +68,22 @@ const ATSTags = () => {
       console.log("data : ", data);
       setTags(data?.tags);
       setScore(data?.atsScore)
+      handleSaveTagsAndScore(data?.atsScore , data?.tags)
     } catch (error) {
       console.error("Failed to parse summaries:", error);
     }
   };
+
+  useEffect(()=>{
+      if(currentResumeData){
+          if(currentResumeData.ats_tags){
+            setTags(currentResumeData.ats_tags)
+          }
+          if(currentResumeData.ats_score){
+              setScore(currentResumeData.ats_score)
+          }
+      }
+  },[currentResumeData])
 
   return (
     <>
@@ -105,6 +141,7 @@ const ATSTags = () => {
           </Grid>
         </CardContent>
       </Card>
+      <Toaster />
     </>
   );
 };

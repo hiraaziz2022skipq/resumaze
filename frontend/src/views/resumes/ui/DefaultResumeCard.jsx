@@ -1,14 +1,20 @@
-import { Box, Button, Stack } from "@mui/material";
+import { Box, Button, Stack, Typography } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import BarChartIcon from "@mui/icons-material/BarChart"; // Icon representing a score or analytics
 // Next Imports
 import { useRouter } from "next/navigation";
-const DefaultResumeOption = ({ data = {
+
+const DefaultResumeOption = ({ resumeData, onViewResume, onEditResume }) => {
+  const data = {
     imgWidth: 200,
     imgHeight: 270,
     category: "resumetemp1",
-  } , onView }) => {
+  };
+
+  const atsScore = resumeData.ats_score !== null ? resumeData.ats_score : 0; // Display 0 if ats_score is null
+
   const router = useRouter();
   return (
     <Box
@@ -28,6 +34,27 @@ const DefaultResumeOption = ({ data = {
         },
       }}
     >
+      {/* ATS Score display */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 8,
+          left: 8,
+          display: "flex",
+          alignItems: "center",
+          backgroundColor: "#FF5722", // Brighter background color
+          color: "#fff", // White font color
+          borderRadius: "8px", // Rounded corners
+          padding: "6px 12px", // Adjusted padding
+          boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.2)", // Subtle shadow for depth
+        }}
+      >
+        <BarChartIcon sx={{ mr: 0.5 }} /> {/* Icon representing score/analytics */}
+        <Typography variant="body1" sx={{ fontWeight: "bold", color: "#fff" }}> {/* White font color */}
+          {atsScore}
+        </Typography>
+      </Box>
+
       <img
         src={`/images/cards/${data.category}.png`}
         alt={`${data.category}`}
@@ -73,9 +100,7 @@ const DefaultResumeOption = ({ data = {
               backgroundColor: "#FB8C00",
             },
           }}
-          onClick={() => {
-            router.push("/edit-resume");
-          }} // Replace with your edit logic
+          onClick={onEditResume}
         >
           Edit
         </Button>
@@ -89,9 +114,7 @@ const DefaultResumeOption = ({ data = {
               backgroundColor: "#43A047",
             },
           }}
-          onClick={()=>{
-
-          }} // Replace with your view logic
+          onClick={onViewResume}
         >
           View
         </Button>
